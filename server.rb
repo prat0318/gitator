@@ -47,10 +47,9 @@ module Gitator
           :access_token => github_user.token,
           :auto_paginate => true
         )
-        output = Gitator.get_suggestions client
-        owner = output[:owner]
-        repos = output[:repos]
-        erb :index, :locals => {:repos => repos, :owner => owner}
+        main = Gitator::Main.new client, {}
+        output = main.get_suggestions
+        erb :index, :locals => {:output => output}
       end
     end
   end
