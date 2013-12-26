@@ -27,14 +27,14 @@ module Gitator
     	client = Octokit::Client.new(
     		:client_id => CLIENT_ID,
     		:client_secret => CLIENT_SECRET,
-    		:auto_paginate => true)
-        main = Gitator::Main.new client, {:owner => owner}
-        output = main.get_suggestions
+    		:auto_paginate => false)
+      main = Gitator::Main.new client, {:owner => owner}
+      output = main.get_suggestions
         # owner = output["owner"]
         # repos = output["repos"]
         # result = output["suggestions"]
         # pp output
-        erb :index, :locals => {:output => output}
+      erb :index, :locals => {:output => output}
     end
 
     get '/' do

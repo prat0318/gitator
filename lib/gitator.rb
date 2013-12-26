@@ -2,30 +2,39 @@ require "gitator/version"
 require "octokit"
 require "phrasie"
 require "json"
+require "pp"
+require "logger"
 
 module Gitator
 	attr_accessor :client, :username, :repos, :is_client_auth, :lang
 	attr_accessor :own_repo, :contri_repo, :forked_repo
-	attr_accessor :extractor
+	attr_accessor :logger
 
 	class Main
 		LANG_COUNT = 3
 		REPO_DESCR_COUNT = 6
+		FETCH_REPO = 30
 		WORDS_LIMIT = 5
 		DOUBLE = 2
 		SINGLE = 1
+		SEARCH_RESULT=10
+		SHOW_SUGG = 6
+		@@extractor ||= Phrasie::Extractor.new
 
 		def initialize(client, options={})
 			@client = client
 			@username = client.login || options[:owner]
 			@is_client_auth = !!client.login
 			@lang = [], @own_repo = [], @contri_repo = [], @forked_repo = []
-			@extractor = Phrasie::Extractor.new
+			@logger = Logger.new(STDOUT)
+			@logger.level = Logger::INFO
 		end
 	
 		def set_repos
 			username = @username if !@is_client_auth
-			@repos = @client.repositories(username, {:per_page => 100, :type=> 'all'})
+			@repos = with_logging("fetch repos") do
+				@client.repositories(username, {:per_page => FETCH_REPO, :type=> 'all', :sort=>'updated'})
+			end
 			@repos.each do |repo|
 				@own_repo << repo if own_repo? repo
 				@forked_repo << repo if forked_repo? repo
@@ -48,21 +57,21 @@ module Gitator
 		end
 
 		def suggest_from(repo, for_lang, since)
+			return [] if repo.empty?
 			search_string = parse_descriptions repo
 			search_string += " language:#{for_lang}" unless for_lang.nil?
 			search_string += " pushed:>#{since}"
-
-			result = @client.search_repositories(search_string, {:per_page => 10,
+			result = @client.search_repositories(search_string, {:per_page => SEARCH_RESULT,
 																													 :headers => { :accept =>
 																													 	'application/vnd.github.v3.text-match+json'
 																													 	}})
-			result.items.reject{|r| r.owner.login == @username}[0..5]
+			result.items.reject{|r| r.owner.login == @username}[0..(SHOW_SUGG-1)]
 		end
 
 		def parse_descriptions(repos)
 			phrase = repos.sort_by{|r| r.updated_at}.reverse[0..(REPO_DESCR_COUNT-1)].
 										 map{|r| r.description}.join(" ")
-      words = @extractor.phrases(phrase).select{|i| i[2] == 1}[0..(WORDS_LIMIT-1)].
+      words = @@extractor.phrases(phrase).select{|i| i[2] == 1}[0..(WORDS_LIMIT-1)].
       																	 map{|j| j[0]}
 			return words.join(" OR ")
 		end
@@ -78,29 +87,48 @@ module Gitator
 
 		def get_suggestions
 			set_repos if @repos.nil?
-			result = suggest_from @own_repo, @lang[0], (Date.today << 6)
+			repos = {:own => @own_repo, :contri => @contri_repo, :forked=> @forked_repo}
+			result = []
+			@lang.each do |lang|
+				repos.each do |k,v|
+					with_logging("search") do
+					  result << [lang, k, v.map(&:name), (suggest_from v, lang, (Date.today << 6))]
+					end
+				end
+			end
+
 			JSON.pretty_generate({
 				:lang => @lang,
-				:repos => @own_repo.map{|i| i.name}, 
 			  :owner => @username,
-			  :type_of_repo => "own",
-			  :suggestions => result.map do |r|
+			  :suggestions => result.map do |r1|
 			  										 {
-			  										 	:name => r.name, 
-			  										 	:owner => r.owner.login, 
-			  										 	:forks => r.forks,
-			  	                    :watchers => r.watchers, 
-			  	                    :score => r.score, 
-			  	                    :match => r.text_matches.map do |tm|
-			  	                              	{
-			  	                              		:fragment => tm.fragment, 
-			  	                              		:matches => tm.matches.map(&:text)
-			  	                              	}
-			  	                              end
+			  										 	:meta => r1[0..2],
+			  										 	:result => r1[3].map do |r|
+			  										 	{
+				  										 	:name => r.name, 
+				  										 	:owner => r.owner.login, 
+				  										 	:forks => r.forks,
+				  	                    :watchers => r.watchers, 
+				  	                    :score => r.score, 
+				  	                    :match => r.text_matches.map do |tm|
+				  	                              	{
+				  	                              		:fragment => tm.fragment, 
+				  	                              		# :matches => tm.matches.map(&:text)
+				  	                              	}
+				  	                              end
+				  	                    }
+  	                            end
 			  	                    }
 			  	              end      
 
 			})
+		end
+
+		def with_logging(desc)
+			start = Time.now
+			result = yield
+			@logger.info("Time taken for #{desc} : #{Time.now - start} secs.")
+			result
 		end
 	end
 end
