@@ -14,7 +14,7 @@ module Gitator
     enable :sessions
 
     set :github_options, {
-      :scopes => "repo,user",
+      :scopes => "",
       :secret => CLIENT_SECRET,
       :client_id => CLIENT_ID,
       :callback_url => "/",
@@ -45,7 +45,7 @@ module Gitator
         client = Octokit::Client.new(
           :login => github_user.login,
           :access_token => github_user.token,
-          :auto_paginate => true
+          :auto_paginate => false
         )
         main = Gitator::Main.new client, {}
         output = main.get_suggestions

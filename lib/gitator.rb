@@ -65,7 +65,7 @@ module Gitator
 																													 :headers => { :accept =>
 																													 	'application/vnd.github.v3.text-match+json'
 																													 	}})
-			result.items.reject{|r| r.owner.login == @username}[0..(SHOW_SUGG-1)]
+			result.items.reject{|r| @repos.map(&:name).include? r.name}[0..(SHOW_SUGG-1)]
 		end
 
 		def parse_descriptions(repos)
