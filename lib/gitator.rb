@@ -89,8 +89,10 @@ module Gitator
 			begin 
 				set_repos if @repos.nil?
 				result = []
-				@lang.select{|l| param_lang.nil? || l==param_lang}.each do |lang|
-					@repos_hash.select{|k,v| repo_type.nil? || repo_type==k.to_s}.each do |k,v|
+				langs = (param_lang.nil? || param_lang.empty?) ? @lang : [param_lang]
+				repos = @repos_hash.select{|k,v| repo_type.nil? || repo_type.empty? || repo_type==k.to_s}
+				langs.each do |lang|
+					repos.each do |k,v|
 						with_logging("search") do
 						  result << [lang, k, v.map(&:name), (suggest_from v, lang, (Date.today << 6))]
 						end

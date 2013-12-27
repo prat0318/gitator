@@ -5,16 +5,41 @@
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <link rel="stylesheet" type="text/css" href="index.css" />
 </head>
 <body>
-  <% if @output["error"] %>
-  	Error : <%= @output["error"] %>
-  	<br/>Try after some time...
-  	<form><input type=button value="Refresh"onClick="window.location.reload()"></form>
-  <% else %>
-  <br/>Suggestions : <%= @output.to_json %>
-  <% end %>
+	<div id="loadingDiv" class="loading"></div>
+	<form>
+	    <input type="text" id="lang" name="lang"/>
+	    <input type="text" id="repo" name="repo"/>
+	  	<input id="submit" type=button value="Submit">
+  	</form>
+  	<br/>
+  	<div id="suggestion"/>
 </body>
 </html>
 
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script>
+    $("#submit").click(function(){
+            $.ajax({
+                    type: "GET",
+                    url: "/suggest",
+                    data: $('form').serialize(),
+                    success: function(data){
+                            $("#suggestion").html(data)
+                    },
+                    error: function(){
+                            $("#suggestion").html("Error! "+data)
+                    }
+            });
+    });
+    var $loading = $('#loadingDiv').fadeTo(0, 0);
+	$(document)
+	  .ajaxStart(function () {
+	    $loading.fadeTo(600, 1);
+	  })
+	  .ajaxStop(function () {
+	    $loading.fadeTo(600, 0);
+	  });
+</script>

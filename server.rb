@@ -20,6 +20,8 @@ module Gitator
       :callback_url => "/",
     }
 
+    set :main, nil
+
     register Sinatra::Auth::Github
 
     get '/public' do
@@ -28,13 +30,12 @@ module Gitator
     		:client_id => CLIENT_ID,
     		:client_secret => CLIENT_SECRET,
     		:auto_paginate => false)
-      @main = Gitator::Main.new client, {:owner => owner}
-      @output = JSON.parse(@main.get_suggestions(params["lang"], params["repo"]))
+      settings.main = Gitator::Main.new client, {:owner => owner}
       erb :index, :locals => {}
     end
 
     get '/suggest' do
-      
+      settings.main.get_suggestions(params["lang"], params["repo"])
     end
 
     get '/' do
@@ -47,9 +48,8 @@ module Gitator
           :access_token => github_user.token,
           :auto_paginate => false
         )
-        @main = Gitator::Main.new client, {}
-        output = JSON.parse(@main.get_suggestions(params["lang"], params["repo"]))
-        erb :index, :locals => {:output => output}
+        settings.main = Gitator::Main.new client, {}
+        erb :index, :locals => {}
       end
     end
   end
