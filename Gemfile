@@ -7,4 +7,5 @@ gem "sinatra_auth_github"
 gem "phrasie"
 gem "json"
 gem "logger"
+gem "haml"
 gemspec

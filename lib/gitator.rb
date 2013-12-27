@@ -7,7 +7,7 @@ require "logger"
 
 module Gitator
 	attr_accessor :client, :username, :repos, :is_client_auth, :lang
-	attr_accessor :own_repo, :contri_repo, :forked_repo
+	attr_accessor :repos_hash
 	attr_accessor :logger
 
 	class Main
@@ -35,12 +35,12 @@ module Gitator
 			@repos = with_logging("fetch repos") do
 				@client.repositories(username, {:per_page => FETCH_REPO, :type=> 'all', :sort=>'updated'})
 			end
+			@repos_hash = {:own => [], :contri => [], :forked => []}
 			@repos.each do |repo|
-				@own_repo << repo if own_repo? repo
-				@forked_repo << repo if forked_repo? repo
-				@contri_repo << repo if contri_repo? repo
+				@repos_hash[:own] << repo if own_repo? repo
+				@repos_hash[:contri] << repo if forked_repo? repo
+				@repos_hash[:forked] << repo if contri_repo? repo
 			end
-			# @owned_repo = @repos.select{|repo| repo.owner.login == @username && repo.fork == false}
 			assign_lang
 		end
 
@@ -85,44 +85,50 @@ module Gitator
 			@lang = lang.tap{|h| h.delete(nil)}.sort_by{|k,v| v}.reverse.map{|i| i[0]}[0..(LANG_COUNT-1)]
 		end
 
-		def get_suggestions
-			set_repos if @repos.nil?
-			repos = {:own => @own_repo, :contri => @contri_repo, :forked=> @forked_repo}
-			result = []
-			@lang.each do |lang|
-				repos.each do |k,v|
-					with_logging("search") do
-					  result << [lang, k, v.map(&:name), (suggest_from v, lang, (Date.today << 6))]
+		def get_suggestions(param_lang=nil, repo_type=nil)
+			begin 
+				set_repos if @repos.nil?
+				result = []
+				@lang.select{|l| param_lang.nil? || l==param_lang}.each do |lang|
+					@repos_hash.select{|k,v| repo_type.nil? || repo_type==k.to_s}.each do |k,v|
+						with_logging("search") do
+						  result << [lang, k, v.map(&:name), (suggest_from v, lang, (Date.today << 6))]
+						end
 					end
 				end
+			rescue Exception => e
+				return {:error => e.message}.to_json
 			end
 
 			JSON.pretty_generate({
 				:lang => @lang,
 			  :owner => @username,
-			  :suggestions => result.map do |r1|
-			  										 {
-			  										 	:meta => r1[0..2],
-			  										 	:result => r1[3].map do |r|
-			  										 	{
-				  										 	:name => r.name, 
-				  										 	:owner => r.owner.login, 
-				  										 	:forks => r.forks,
-				  	                    :watchers => r.watchers, 
-				  	                    :score => r.score, 
-				  	                    :match => r.text_matches.map do |tm|
-				  	                              	{
-				  	                              		:fragment => tm.fragment, 
-				  	                              		# :matches => tm.matches.map(&:text)
-				  	                              	}
-				  	                              end
-				  	                    }
-  	                            end
-			  	                    }
-			  	              end      
-
+			  :suggestions => format_search_result(result)      
 			})
 		end
+
+		def format_search_result(result)
+			result.map do |r1|
+					 {
+					 	:meta => r1[0..2],
+					 	:result => r1[3].map do |r|
+					 	{
+						 	:name => r.name, 
+						 	:owner => r.owner.login, 
+						 	:forks => r.forks,
+              :watchers => r.watchers, 
+              :score => r.score, 
+              :match => r.text_matches.map do |tm|
+                        	{
+                        		:fragment => tm.fragment, 
+                        		# :matches => tm.matches.map(&:text)
+                        	}
+                        end
+              }
+              end
+            }
+      end
+    end
 
 		def with_logging(desc)
 			start = Time.now
@@ -130,5 +136,6 @@ module Gitator
 			@logger.info("Time taken for #{desc} : #{Time.now - start} secs.")
 			result
 		end
+
 	end
 end

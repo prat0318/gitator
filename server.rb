@@ -28,13 +28,13 @@ module Gitator
     		:client_id => CLIENT_ID,
     		:client_secret => CLIENT_SECRET,
     		:auto_paginate => false)
-      main = Gitator::Main.new client, {:owner => owner}
-      output = main.get_suggestions
-        # owner = output["owner"]
-        # repos = output["repos"]
-        # result = output["suggestions"]
-        # pp output
-      erb :index, :locals => {:output => output}
+      @main = Gitator::Main.new client, {:owner => owner}
+      @output = JSON.parse(@main.get_suggestions(params["lang"], params["repo"]))
+      erb :index, :locals => {}
+    end
+
+    get '/suggest' do
+      
     end
 
     get '/' do
@@ -47,8 +47,8 @@ module Gitator
           :access_token => github_user.token,
           :auto_paginate => false
         )
-        main = Gitator::Main.new client, {}
-        output = main.get_suggestions
+        @main = Gitator::Main.new client, {}
+        output = JSON.parse(@main.get_suggestions(params["lang"], params["repo"]))
         erb :index, :locals => {:output => output}
       end
     end

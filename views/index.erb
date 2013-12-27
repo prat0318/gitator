@@ -8,7 +8,13 @@
 
 </head>
 <body>
-  <br/>Suggestions : <%= output %>
+  <% if @output["error"] %>
+  	Error : <%= @output["error"] %>
+  	<br/>Try after some time...
+  	<form><input type=button value="Refresh"onClick="window.location.reload()"></form>
+  <% else %>
+  <br/>Suggestions : <%= @output.to_json %>
+  <% end %>
 </body>
 </html>
 
