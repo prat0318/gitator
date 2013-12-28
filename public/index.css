@@ -7,4 +7,10 @@
 
 .height-120 {
 	height: 120px;
+	text-align: center;
+	font-size: 200%;
+}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
+	background-color: #EBF1F5;
 }

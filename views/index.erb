@@ -16,33 +16,33 @@
 	</div>
 
 	<ul id="search-type" class="nav nav-tabs nav-justified">
-	  <li class="active"><a href="#" data-toggle="tab">Repo</a></li>
-	  <li><a href="#" data-toggle="tab">Location</a></li>
-	  <li><a href="#" data-toggle="tab">Org.</a></li>
+	  <li class="active"><a href="#" data-toggle="tab" name="repo">Repo</a></li>
+	  <li><a href="#" data-toggle="tab" name="locn">Location</a></li>
+	  <li><a href="#" data-toggle="tab" name="org">Org.</a></li>
 	</ul>
 	<div id="main-body" style="overflow:hidden">
 		<div style="margin: 10px; float: right; width: 67%">
 			<ul id="lang" class="nav nav-pills nav-justified" style="padding-bottom: 15px">
-			  <li class="active"><a href="#" data-toggle="pill">Ruby</a></li>
-			  <li><a href="#" data-toggle="pill">Java</a></li>
-			  <li><a href="#" data-toggle="pill">C++</a></li>
-			  <li><a href="#" data-toggle="pill">Python</a></li>
+			  <li class="active"><a href="#" data-toggle="pill" name="Ruby">Ruby</a></li>
+			  <li><a href="#" data-toggle="pill" name="Java">Java</a></li>
+			  <li><a href="#" data-toggle="pill" name="C++">C++</a></li>
+			  <li><a href="#" data-toggle="pill" name="Python">Python</a></li>
 			  <li class="dropdown">
 			    <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="lang-dropdown">
 			      Others <span class="caret"></span>
 			    </a>
 			    <ul class="dropdown-menu">
-			    	<li><a href="#" data-toggle="pill">Scala</a></li>
-			    	<li><a href="#" data-toggle="pill">PHP</a></li>
+			    	<li><a href="#" data-toggle="pill" name="Scala">Scala</a></li>
+			    	<li><a href="#" data-toggle="pill" name="PHP">PHP</a></li>
 			    </ul>
 			  </li>
 			</ul>
 			<div id="suggestion"></div>
 		</div>
 		<ul id="category" class="nav nav-pills nav-stacked" style="width:30%; float:left; margin:5px; padding-top: 60px">
-			<li class="active"><a class="height-120" href="#" data-toggle="pill">own</a></li>
-			<li><a class="height-120" href="#" data-toggle="pill">contri</a></li>
-			<li><a class="height-120" href="#" data-toggle="pill">forked</a></li>
+			<li class="active"><a class="height-120" href="#" data-toggle="pill" name="own">own</a></li>
+			<li><a class="height-120" href="#" data-toggle="pill" name="contri">contri</a></li>
+			<li><a class="height-120" href="#" data-toggle="pill" name="forked">forked</a></li>
 		</ul>
   	</div>
   </div>
@@ -57,23 +57,32 @@
     	ajaxCall(e);
     });
 
+    function getName(divId) {
+    	var divString = "#"+divId;
+    	return $($($(divString).find(".active").last()).children()[0]).attr('name')
+    }
+
+    function buildPanel(object) {
+    	html = '<div class="panel panel-info"><div class="panel-body">'+
+                    				object.owner+'/'+object.name+'</div></div>';
+		$(html).hide().appendTo("#suggestion").fadeIn(500);
+    }
+
     function ajaxCall(e) {
     	if(e && e.target.id == "lang-dropdown")return;
     		setTimeout(function () {
-    		var var_lang = $($($("#lang").find(".active").last()).children()[0]).html()
-    		var var_repo = $($($("#category").find(".active").last()).children()[0]).html()
             $.ajax({
                     type: "GET",
                     url: "/suggest",
-                    data: {lang: var_lang, repo: var_repo},
+                    data: {lang: getName("lang"), 
+                    	   repo: getName("category"),
+                    	   search_type: getName("search-type")},
                     success: function(data){
                     		data = $.parseJSON(data);
                     		$("#suggestion").empty();
                     		$.each(data.suggestions[0].result, function(index, object){
-                    			$("#suggestion").append('<div class="panel panel-info"><div class="panel-body">'+
-                    				object.owner+'/'+object.name+'</div></div>');
+                    			buildPanel(object)
                     		});
-                            // $("#suggestion").html(data)
                     },
                     error: function(){
                             $("#suggestion").html("Error! "+data)
@@ -82,25 +91,6 @@
             });
     }
 
-    // $("#submit").click(function(){
-    //         $.ajax({
-    //                 type: "GET",
-    //                 url: "/suggest",
-    //                 data: $('form').serialize(),
-    //                 success: function(data){
-    //                 		data = $.parseJSON(data);
-    //                 		$("#suggestion").empty();
-    //                 		$.each(data.suggestions[0].result, function(index, object){
-    //                 			$("#suggestion").append('<div class="panel panel-info"><div class="panel-body">'+
-    //                 				object.owner+'/'+object.name+'</div></div>');
-    //                 		});
-    //                         // $("#suggestion").html(data)
-    //                 },
-    //                 error: function(){
-    //                         $("#suggestion").html("Error! "+data)
-    //                 }
-    //         });
-    // });
     var $loading = $('#loadingDiv').fadeTo(0, 0);
 	$(document)
 	  .ajaxStart(function () {
