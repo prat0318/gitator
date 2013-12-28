@@ -5,35 +5,102 @@
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="index.css" />
 </head>
 <body>
 	<div id="loadingDiv" class="loading"></div>
-	<form>
-	    <input type="text" id="lang" name="lang"/>
-	    <input type="text" id="repo" name="repo"/>
-	  	<input id="submit" type=button value="Submit">
-  	</form>
-  	<br/>
-  	<div id="suggestion"/>
+<div class="container">
+	<div class="page-header">
+	  <h1>Gitator <small>Find awesome repos which best suit your profile!</small></h1>
+	</div>
+
+	<ul id="search-type" class="nav nav-tabs nav-justified">
+	  <li class="active"><a href="#" data-toggle="tab">Repo</a></li>
+	  <li><a href="#" data-toggle="tab">Location</a></li>
+	  <li><a href="#" data-toggle="tab">Org.</a></li>
+	</ul>
+	<div id="main-body" style="overflow:hidden">
+		<div style="margin: 10px; float: right; width: 67%">
+			<ul id="lang" class="nav nav-pills nav-justified" style="padding-bottom: 15px">
+			  <li class="active"><a href="#" data-toggle="pill">Ruby</a></li>
+			  <li><a href="#" data-toggle="pill">Java</a></li>
+			  <li><a href="#" data-toggle="pill">C++</a></li>
+			  <li><a href="#" data-toggle="pill">Python</a></li>
+			  <li class="dropdown">
+			    <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="lang-dropdown">
+			      Others <span class="caret"></span>
+			    </a>
+			    <ul class="dropdown-menu">
+			    	<li><a href="#" data-toggle="pill">Scala</a></li>
+			    	<li><a href="#" data-toggle="pill">PHP</a></li>
+			    </ul>
+			  </li>
+			</ul>
+			<div id="suggestion"></div>
+		</div>
+		<ul id="category" class="nav nav-pills nav-stacked" style="width:30%; float:left; margin:5px; padding-top: 60px">
+			<li class="active"><a class="height-120" href="#" data-toggle="pill">own</a></li>
+			<li><a class="height-120" href="#" data-toggle="pill">contri</a></li>
+			<li><a class="height-120" href="#" data-toggle="pill">forked</a></li>
+		</ul>
+  	</div>
+  </div>
 </body>
 </html>
 
+<!-- Latest compiled and minified JavaScript -->
 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 <script>
-    $("#submit").click(function(){
+    $(".nav").click(function(e){
+    	ajaxCall(e);
+    });
+
+    function ajaxCall(e) {
+    	if(e && e.target.id == "lang-dropdown")return;
+    		setTimeout(function () {
+    		var var_lang = $($($("#lang").find(".active").last()).children()[0]).html()
+    		var var_repo = $($($("#category").find(".active").last()).children()[0]).html()
             $.ajax({
                     type: "GET",
                     url: "/suggest",
-                    data: $('form').serialize(),
+                    data: {lang: var_lang, repo: var_repo},
                     success: function(data){
-                            $("#suggestion").html(data)
+                    		data = $.parseJSON(data);
+                    		$("#suggestion").empty();
+                    		$.each(data.suggestions[0].result, function(index, object){
+                    			$("#suggestion").append('<div class="panel panel-info"><div class="panel-body">'+
+                    				object.owner+'/'+object.name+'</div></div>');
+                    		});
+                            // $("#suggestion").html(data)
                     },
                     error: function(){
                             $("#suggestion").html("Error! "+data)
                     }
+                }, 10);
             });
-    });
+    }
+
+    // $("#submit").click(function(){
+    //         $.ajax({
+    //                 type: "GET",
+    //                 url: "/suggest",
+    //                 data: $('form').serialize(),
+    //                 success: function(data){
+    //                 		data = $.parseJSON(data);
+    //                 		$("#suggestion").empty();
+    //                 		$.each(data.suggestions[0].result, function(index, object){
+    //                 			$("#suggestion").append('<div class="panel panel-info"><div class="panel-body">'+
+    //                 				object.owner+'/'+object.name+'</div></div>');
+    //                 		});
+    //                         // $("#suggestion").html(data)
+    //                 },
+    //                 error: function(){
+    //                         $("#suggestion").html("Error! "+data)
+    //                 }
+    //         });
+    // });
     var $loading = $('#loadingDiv').fadeTo(0, 0);
 	$(document)
 	  .ajaxStart(function () {
@@ -42,4 +109,5 @@
 	  .ajaxStop(function () {
 	    $loading.fadeTo(600, 0);
 	  });
+	ajaxCall(null);
 </script>

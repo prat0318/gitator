@@ -38,8 +38,8 @@ module Gitator
 			@repos_hash = {:own => [], :contri => [], :forked => []}
 			@repos.each do |repo|
 				@repos_hash[:own] << repo if own_repo? repo
-				@repos_hash[:contri] << repo if forked_repo? repo
-				@repos_hash[:forked] << repo if contri_repo? repo
+				@repos_hash[:forked] << repo if forked_repo? repo
+				@repos_hash[:contri] << repo if contri_repo? repo
 			end
 			assign_lang
 		end
