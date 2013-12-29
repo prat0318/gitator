@@ -6,12 +6,13 @@ require "pp"
 require "logger"
 
 module Gitator
-	attr_accessor :client, :username, :repos, :is_client_auth, :lang
-	attr_accessor :repos_hash
-	attr_accessor :logger
 
 	class Main
-		LANG_COUNT = 3
+		attr_accessor :client, :username, :repos, :is_client_auth, :lang
+		attr_accessor :repos_hash, :logger, :user_info
+		attr_accessor :sidebar
+
+		LANG_COUNT = 4
 		REPO_DESCR_COUNT = 6
 		FETCH_REPO = 30
 		WORDS_LIMIT = 5
@@ -19,19 +20,30 @@ module Gitator
 		SINGLE = 1
 		SEARCH_RESULT=10
 		SHOW_SUGG = 6
+		ALL_LANGS = %w{JavaScript Ruby Java PHP Python C++ C Objective-C C# Shell CSS
+    	      Perl CoffeeScript VimL Scala Go Prolog Clojure Haskell Lua}.sort
 		@@extractor ||= Phrasie::Extractor.new
 
 		def initialize(client, options={})
 			@client = client
 			@username = client.login || options[:owner]
 			@is_client_auth = !!client.login
-			@lang = [], @own_repo = [], @contri_repo = [], @forked_repo = []
-			@logger = Logger.new(STDOUT)
-			@logger.level = Logger::INFO
+			@lang = []; @sidebar = {}
+			init_logger
+
+			username = @username if !@is_client_auth
+			@user_info = client.user username			
+			set_repos username
+			set_orgs username
+			set_locn
 		end
 	
-		def set_repos
-			username = @username if !@is_client_auth
+	  def init_logger
+		  @logger = Logger.new(STDOUT)
+			@logger.level = Logger::INFO
+		end
+		
+		def set_repos(username)
 			@repos = with_logging("fetch repos") do
 				@client.repositories(username, {:per_page => FETCH_REPO, :type=> 'all', :sort=>'updated'})
 			end
@@ -41,7 +53,24 @@ module Gitator
 				@repos_hash[:forked] << repo if forked_repo? repo
 				@repos_hash[:contri] << repo if contri_repo? repo
 			end
+			populate_repos_to_sidebar
 			assign_lang
+		end
+
+		def populate_repos_to_sidebar
+			repo_sidebar = {}
+			repo_sidebar[:own] = ['Own repos','Repos you own and aren\'t forked'] unless @repos_hash[:own].empty?
+			repo_sidebar[:forked] = ['Forked repos','Repos you have forked'] unless @repos_hash[:forked].empty?
+			repo_sidebar[:contri] = ['Contri repos','Repos you have contributed to'] unless @repos_hash[:contri].empty?
+			@sidebar[:repos] = repo_sidebar
+		end
+
+		def set_orgs(username)
+			@sidebar[:orgs] = Hash[client.organizations(username).map(&:login).map{|o| [o,[o,'']]}]
+		end
+
+		def set_locn
+			@sidebar[:locn] =  {:locn => [@user_info.location,'']}
 		end
 
 		def own_repo?(repo)
@@ -82,6 +111,7 @@ module Gitator
 			end
 			lang = Hash[@repos.group_by{|repo| repo.language}.map{|grp_id, item| [grp_id, grp_size.call(item)]}]
 			
+			@logger.info("Langss: #{lang}")
 			@lang = lang.tap{|h| h.delete(nil)}.sort_by{|k,v| v}.reverse.map{|i| i[0]}[0..(LANG_COUNT-1)]
 		end
 
@@ -103,8 +133,6 @@ module Gitator
 			end
 
 			JSON.pretty_generate({
-				:lang => @lang,
-			  :owner => @username,
 			  :suggestions => format_search_result(result)      
 			})
 		end

@@ -16,33 +16,37 @@
 	</div>
 
 	<ul id="search-type" class="nav nav-tabs nav-justified">
-	  <li class="active"><a href="#" data-toggle="tab" name="repo">Repo</a></li>
+	  <li class="active"><a href="#" data-toggle="tab" name="repos">Repo</a></li>
 	  <li><a href="#" data-toggle="tab" name="locn">Location</a></li>
-	  <li><a href="#" data-toggle="tab" name="org">Org.</a></li>
+	  <li><a href="#" data-toggle="tab" name="orgs">Org.</a></li>
 	</ul>
 	<div id="main-body" style="overflow:hidden">
 		<div style="margin: 10px; float: right; width: 67%">
 			<ul id="lang" class="nav nav-pills nav-justified" style="padding-bottom: 15px">
-			  <li class="active"><a href="#" data-toggle="pill" name="Ruby">Ruby</a></li>
-			  <li><a href="#" data-toggle="pill" name="Java">Java</a></li>
-			  <li><a href="#" data-toggle="pill" name="C++">C++</a></li>
-			  <li><a href="#" data-toggle="pill" name="Python">Python</a></li>
+			  <% settings.main.lang.each do |i| %>
+			    <li><a href="#" data-toggle="pill" name="<%= i %>"><%= i %></a></li>
+			  <% end %>
+
 			  <li class="dropdown">
 			    <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="lang-dropdown">
 			      Others <span class="caret"></span>
 			    </a>
 			    <ul class="dropdown-menu">
-			    	<li><a href="#" data-toggle="pill" name="Scala">Scala</a></li>
-			    	<li><a href="#" data-toggle="pill" name="PHP">PHP</a></li>
+			    	<% Gitator::Main::ALL_LANGS.each do |lang| %>
+			    	<li><a href="#" data-toggle="pill" name="<%= lang%>"><%=lang%></a></li>
+			    	<% end %>
 			    </ul>
 			  </li>
 			</ul>
 			<div id="suggestion"></div>
 		</div>
 		<ul id="category" class="nav nav-pills nav-stacked" style="width:30%; float:left; margin:5px; padding-top: 60px">
-			<li class="active"><a class="height-120" href="#" data-toggle="pill" name="own">own</a></li>
-			<li><a class="height-120" href="#" data-toggle="pill" name="contri">contri</a></li>
-			<li><a class="height-120" href="#" data-toggle="pill" name="forked">forked</a></li>
+			<% settings.main.sidebar.each do |k,v| %>
+				<% v.each do |val| %>
+					<li style="display:none" class="<%=k%>"><a class="height-120" href="#" data-toggle="pill" name="<%=val[0]%>">
+					<%=val[0]%></a></li>
+				<% end %>
+			<% end %>
 		</ul>
   	</div>
   </div>
@@ -99,5 +103,8 @@
 	  .ajaxStop(function () {
 	    $loading.fadeTo(600, 0);
 	  });
+	$("."+getName("search-type")).show()
+	$($("#category").children().first()).addClass("active")
+	$($("#lang").children().first()).addClass("active")
 	ajaxCall(null);
 </script>
