@@ -30,12 +30,17 @@ module Gitator
     		:client_id => CLIENT_ID,
     		:client_secret => CLIENT_SECRET,
     		:auto_paginate => false)
-      settings.main = Gitator::Main.new client, {:owner => owner}
+      begin
+        settings.main = Gitator::Main.new client, {:owner => owner}
+      rescue Octokit::NotFound => e
+        return erb :not_found, :locals => {:error => "#{owner} not found!"}
+      end
       erb :index, :locals => {}
     end
 
     get '/suggest' do
-      settings.main.get_suggestions(params["lang"], params["category"], params["search_type"])
+      param = Hash[params.map{ |k, v| [k.to_sym, v] }]
+      settings.main.get_suggestions(param)
     end
 
     get '/' do

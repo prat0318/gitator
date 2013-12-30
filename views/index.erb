@@ -11,8 +11,11 @@
 <body>
 	<div id="loadingDiv" class="loading"></div>
 <div class="container">
-	<div class="page-header">
-	  <h1>Gitator <small>Find awesome repos which best suit your profile!</small></h1>
+    <img style="float:right" src="http://gravatar.com/avatar/<%=settings.main.user_info.gravatar_id%>"></img>
+	<div class="page-header" style="margin:0 0 30px">
+	  <h1>Gitator <small>Find awesome repos which best suit your profile!
+	  <span style="float:right; line-height: 2; margin-right:10px">@<%=settings.main.username%></span>
+	  </small></h1>
 	</div>
 
 	<ul id="search-type" class="nav nav-tabs nav-justified">

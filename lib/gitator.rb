@@ -70,7 +70,7 @@ module Gitator
 		end
 
 		def set_locn
-			@sidebar[:locn] =  [@user_info.location,'']
+			@sidebar[:locn] =  [[@user_info.location,'']]
 		end
 
 		def own_repo?(repo)
@@ -115,7 +115,10 @@ module Gitator
 			@lang = lang.tap{|h| h.delete(nil)}.sort_by{|k,v| v}.reverse.map{|i| i[0]}[0..(LANG_COUNT-1)]
 		end
 
-		def get_suggestions(param_lang=nil, repo_type=nil)
+		def get_suggestions(options = {})
+			param_lang = options[:lang]
+			repo_type = options[:category]
+			return {:suggestions => []}.to_json unless options[:search_type] == 'repos'
 			begin 
 				set_repos if @repos.nil?
 				result = []
