@@ -9,7 +9,7 @@ module Gitator
 
 	class Main
 		attr_accessor :client, :username, :repos, :is_client_auth, :lang
-		attr_accessor :repos_hash, :logger, :user_info
+		attr_accessor :repos_hash, :logger, :user_info, :following, :org_members
 		attr_accessor :sidebar
 
 		LANG_COUNT = 4
@@ -29,7 +29,8 @@ module Gitator
 			@client = client
 			@username = client.login || options[:owner]
 			@is_client_auth = !!client.login
-			@lang = []; @sidebar = {}
+			@lang = []; @sidebar = {}; @following = [@username]
+			@org_members = {}
 			init_logger
 
 			username = @username if !@is_client_auth
@@ -101,10 +102,13 @@ module Gitator
 		def call_api_to_suggest_users(for_lang, options)
 			search_string = ""
 			search_string += " language:#{for_lang}" unless for_lang.nil?
-			search_string += " user:#{options[:org]}" unless options[:org].nil?
+			unless options[:org_members].nil? 
+				options[:org_members].each {|member| search_string += " user:#{member}" }
+			end
 			search_string += " location:#{options[:locn]}" unless options[:locn].nil?
+			# @logger.info("String to be searched : #{search_string}")
 			result = @client.search_users(search_string, {:per_page => SEARCH_RESULT})
-			result.items[0..(SHOW_SUGG-1)]
+			result.items.reject{|r| @following.include? r.login}[0..(SHOW_SUGG-1)]
 		end
 
 		def parse_descriptions(repos)
@@ -140,17 +144,34 @@ module Gitator
 			}.to_json			
 		end
 
+		def get_org_members(org)
+			org_members = @org_members[org.to_sym]
+			org_members ||= with_logging("org_members"){@client.org_members(org).map(&:login)}
+			@org_members[org.to_sym] ||= org_members
+		end
+
+		def get_orgs_suggestions(options={})
+			return {:suggestions => []}.to_json unless options_validated?(options, 'orgs')
+			org = options[:category]
+			lang = options[:lang]
+			org_members = get_org_members(org)
+
+			result = with_logging("search_user_org") do
+			  call_api_to_suggest_users lang, {:org_members => org_members}
+			end			
+			{
+				:type => 'User',
+			  :suggestions => format_user_result(result)      
+			}.to_json			
+		end
+
 		def get_repos_suggestions(options = {})
 			return {:suggestions => []}.to_json unless options_validated?(options, 'repos')
 			param_lang = options[:lang]
 			repo_type = options[:category]
-			# begin 
 			result = with_logging("search_repo") do
 			  call_api_to_suggest_repos @repos_hash[repo_type.to_sym], param_lang, (Date.today << MONTHS_AGO)
 			end
-			# rescue Exception => e
-			# 	return {:error => e.message}.to_json
-			# end
 			{
 				:type => 'Repo',
 			  :suggestions => format_repo_result(result)      
