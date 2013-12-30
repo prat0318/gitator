@@ -40,7 +40,7 @@ module Gitator
 
     get '/suggest' do
       param = Hash[params.map{ |k, v| [k.to_sym, v] }]
-      settings.main.get_suggestions(param)
+      settings.main.send("get_#{param[:search_type]}_suggestions", param)
     end
 
     get '/' do

@@ -14,6 +14,7 @@ module Gitator
 
 		LANG_COUNT = 4
 		REPO_DESCR_COUNT = 6
+		MONTHS_AGO = 6
 		FETCH_REPO = 30
 		WORDS_LIMIT = 5
 		DOUBLE = 2
@@ -85,9 +86,9 @@ module Gitator
 			!own_repo?(repo) && !forked_repo?(repo)
 		end
 
-		def suggest_from(repo, for_lang, since)
-			return [] if repo.empty?
-			search_string = parse_descriptions repo
+		def call_api_to_suggest_repos(repos, for_lang, since)
+			return [] if repos.empty?
+			search_string = parse_descriptions repos
 			search_string += " language:#{for_lang}" unless for_lang.nil?
 			search_string += " pushed:>#{since}"
 			result = @client.search_repositories(search_string, {:per_page => SEARCH_RESULT,
@@ -95,6 +96,15 @@ module Gitator
 																													 	'application/vnd.github.v3.text-match+json'
 																													 	}})
 			result.items.reject{|r| @repos.map(&:name).include? r.name}[0..(SHOW_SUGG-1)]
+		end
+
+		def call_api_to_suggest_users(for_lang, options)
+			search_string = ""
+			search_string += " language:#{for_lang}" unless for_lang.nil?
+			search_string += " user:#{options[:org]}" unless options[:org].nil?
+			search_string += " location:#{options[:locn]}" unless options[:locn].nil?
+			result = @client.search_users(search_string, {:per_page => SEARCH_RESULT})
+			result.items[0..(SHOW_SUGG-1)]
 		end
 
 		def parse_descriptions(repos)
@@ -109,57 +119,69 @@ module Gitator
 			grp_size = lambda do |grp| 
 				grp.inject(0) { |count, repo| count += (own_repo?(repo) ? DOUBLE : SINGLE) }
 			end
-			lang = Hash[@repos.group_by{|repo| repo.language}.map{|grp_id, item| [grp_id, grp_size.call(item)]}]
-			
-			@logger.info("Langss: #{lang}")
+			lang = Hash[@repos.group_by{|repo| repo.language}.map{|grp_id, item| [grp_id, grp_size.call(item)]}]			
 			@lang = lang.tap{|h| h.delete(nil)}.sort_by{|k,v| v}.reverse.map{|i| i[0]}[0..(LANG_COUNT-1)]
 		end
 
-		def get_suggestions(options = {})
-			param_lang = options[:lang]
-			repo_type = options[:category]
-			return {:suggestions => []}.to_json unless options[:search_type] == 'repos'
-			begin 
-				set_repos if @repos.nil?
-				result = []
-				langs = (param_lang.nil? || param_lang.empty?) ? @lang : [param_lang]
-				repos = @repos_hash.select{|k,v| repo_type.nil? || repo_type.empty? || repo_type==k.to_s}
-				langs.each do |lang|
-					repos.each do |k,v|
-						with_logging("search") do
-						  result << [lang, k, v.map(&:name), (suggest_from v, lang, (Date.today << 6))]
-						end
-					end
-				end
-			rescue Exception => e
-				return {:error => e.message}.to_json
-			end
-
-			JSON.pretty_generate({
-			  :suggestions => format_search_result(result)      
-			})
+		def options_validated?(options, search_type)
+			!(options[:lang].nil? || options[:category].nil? || options[:search_type] != search_type)
 		end
 
-		def format_search_result(result)
-			result.map do |r1|
-					 {
-					 	:meta => r1[0..2],
-					 	:result => r1[3].map do |r|
-					 	{
-						 	:name => r.name, 
-						 	:owner => r.owner.login, 
-						 	:forks => r.forks,
-              :watchers => r.watchers, 
-              :score => r.score, 
-              :match => r.text_matches.map do |tm|
-                        	{
-                        		:fragment => tm.fragment, 
-                        		# :matches => tm.matches.map(&:text)
-                        	}
-                        end
-              }
-              end
-            }
+		def get_locn_suggestions(options={})
+			return {:suggestions => []}.to_json unless options_validated?(options, 'locn')
+			locn = options[:category]
+			lang = options[:lang]
+			result = with_logging("search_user_locn") do
+			  call_api_to_suggest_users lang, {:locn => locn}
+			end			
+			{
+				:type => 'User',
+			  :suggestions => format_user_result(result)      
+			}.to_json			
+		end
+
+		def get_repos_suggestions(options = {})
+			return {:suggestions => []}.to_json unless options_validated?(options, 'repos')
+			param_lang = options[:lang]
+			repo_type = options[:category]
+			# begin 
+			result = with_logging("search_repo") do
+			  call_api_to_suggest_repos @repos_hash[repo_type.to_sym], param_lang, (Date.today << MONTHS_AGO)
+			end
+			# rescue Exception => e
+			# 	return {:error => e.message}.to_json
+			# end
+			{
+				:type => 'Repo',
+			  :suggestions => format_repo_result(result)      
+			}.to_json
+		end
+
+		def format_user_result(result)
+			result.map do |r|
+				{
+					:login => r.login,
+					:type => r.type,
+					:gravatar_id => r.gravatar_id
+				}
+			end
+		end
+
+		def format_repo_result(result)
+			result.map do |r|
+			 {
+			 	:name => r.name, 
+			 	:owner => r.owner.login, 
+			 	:forks => r.forks,
+        :watchers => r.watchers, 
+        :score => r.score, 
+        :match => r.text_matches.map do |tm|
+                  	{
+                  		:fragment => tm.fragment, 
+                  		:matches => tm.matches.map(&:text)
+                  	}
+                  end
+        }
       end
     end
 
@@ -169,6 +191,10 @@ module Gitator
 			@logger.info("Time taken for #{desc} : #{Time.now - start} secs.")
 			result
 		end
+
+		# def method_missing
+		# 	raise new Exception("Method not defined!")
+		# end
 
 	end
 end

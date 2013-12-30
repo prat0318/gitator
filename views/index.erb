@@ -80,9 +80,15 @@
     	return $($($(divString).find(".active").last()).children()[0]).attr('name');
     }
 
-    function buildPanel(object) {
+    function buildRepoPanel(object) {
     	html = '<div class="panel panel-info"><div class="panel-body">'+
                     				object.owner+'/'+object.name+'</div></div>';
+		$(html).hide().appendTo("#suggestion").fadeIn(500);
+    }
+
+    function buildUserPanel(object) {
+    	html = '<div class="panel panel-info"><div class="panel-body">'+
+                    				object.login+'/'+object.type+'</div></div>';
 		$(html).hide().appendTo("#suggestion").fadeIn(500);
     }
 
@@ -102,12 +108,12 @@
                 			$("#suggestion").html("Error! No Data found :(")
             				return
                 		}
-                		$.each(data.suggestions[0].result, function(index, object){
-                			buildPanel(object)
+                		$.each(data.suggestions, function(index, object){
+                			window["build"+data.type+"Panel"](object)
                 		});
                 },
-                error: function(){
-                        $("#suggestion").html("Error! "+data)
+                error: function(response, q, t){
+                        $("#suggestion").html("Oops! Something went wrong.")
                 }
             }, 20);
         });
