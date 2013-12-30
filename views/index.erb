@@ -16,9 +16,9 @@
 	</div>
 
 	<ul id="search-type" class="nav nav-tabs nav-justified">
-	  <li class="active"><a href="#" data-toggle="tab" name="repos">Repo</a></li>
-	  <li><a href="#" data-toggle="tab" name="locn">Location</a></li>
-	  <li><a href="#" data-toggle="tab" name="orgs">Org.</a></li>
+	  <li class="active"><a href="#" data-toggle="tab" name="repos" class="search-type">Repo</a></li>
+	  <li><a href="#" data-toggle="tab" name="locn" class="search-type">Location</a></li>
+	  <li><a href="#" data-toggle="tab" name="orgs" class="search-type">Org.</a></li>
 	</ul>
 	<div id="main-body" style="overflow:hidden">
 		<div style="margin: 10px; float: right; width: 67%">
@@ -43,7 +43,7 @@
 		<ul id="category" class="nav nav-pills nav-stacked" style="width:30%; float:left; margin:5px; padding-top: 60px">
 			<% settings.main.sidebar.each do |k,v| %>
 				<% v.each do |val| %>
-					<li style="display:none" class="<%=k%>"><a class="height-120" href="#" data-toggle="pill" name="<%=val[0]%>">
+					<li style="display:none" class="<%=k%> category"><a class="height-120" href="#" data-toggle="pill" name="<%=val[0]%>">
 					<%=val[0]%></a></li>
 				<% end %>
 			<% end %>
@@ -58,12 +58,23 @@
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 <script>
     $(".nav").click(function(e){
-    	ajaxCall(e);
+    	if($(e.target).hasClass("search-type"))
+    		setTimeout( function(){updateSidebar(e)}, 10);
+    	else
+    		ajaxCall(e);
     });
+
+    function updateSidebar(e){		
+		$(".category").hide()
+		$(".category").removeClass("active")
+		$("."+getName("search-type")).show()
+		$($("#category").children(":visible").first()).addClass("active")
+		ajaxCall(e);
+    }
 
     function getName(divId) {
     	var divString = "#"+divId;
-    	return $($($(divString).find(".active").last()).children()[0]).attr('name')
+    	return $($($(divString).find(".active").last()).children()[0]).attr('name');
     }
 
     function buildPanel(object) {
@@ -73,26 +84,30 @@
     }
 
     function ajaxCall(e) {
-    	if(e && e.target.id == "lang-dropdown")return;
-    		setTimeout(function () {
-            $.ajax({
-                    type: "GET",
-                    url: "/suggest",
-                    data: {lang: getName("lang"), 
-                    	   repo: getName("category"),
-                    	   search_type: getName("search-type")},
-                    success: function(data){
-                    		data = $.parseJSON(data);
-                    		$("#suggestion").empty();
-                    		$.each(data.suggestions[0].result, function(index, object){
-                    			buildPanel(object)
-                    		});
-                    },
-                    error: function(){
-                            $("#suggestion").html("Error! "+data)
-                    }
-                }, 10);
-            });
+		if(e && e.target.id == "lang-dropdown") return;
+		setTimeout(function () {
+        	$.ajax({
+                type: "GET",
+                url: "/suggest",
+                data: {lang: getName("lang"), 
+                	   category: getName("category"),
+                	   search_type: getName("search-type")},
+                success: function(data){
+                		data = $.parseJSON(data);
+                		$("#suggestion").empty();
+                		if(!data.suggestions || (data.suggestions.length == 0)) {
+                			$("#suggestion").html("Error! No Data found :(")
+            				return
+                		}
+                		$.each(data.suggestions[0].result, function(index, object){
+                			buildPanel(object)
+                		});
+                },
+                error: function(){
+                        $("#suggestion").html("Error! "+data)
+                }
+            }, 20);
+        });
     }
 
     var $loading = $('#loadingDiv').fadeTo(0, 0);
@@ -104,7 +119,7 @@
 	    $loading.fadeTo(600, 0);
 	  });
 	$("."+getName("search-type")).show()
-	$($("#category").children().first()).addClass("active")
+	$($("#category").children(":visible").first()).addClass("active")
 	$($("#lang").children().first()).addClass("active")
 	ajaxCall(null);
 </script>

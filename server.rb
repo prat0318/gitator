@@ -35,7 +35,7 @@ module Gitator
     end
 
     get '/suggest' do
-      settings.main.get_suggestions(params["lang"], params["repo"])
+      settings.main.get_suggestions(params["lang"], params["category"], params["search_type"])
     end
 
     get '/' do

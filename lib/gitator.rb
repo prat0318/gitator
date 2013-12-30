@@ -58,19 +58,19 @@ module Gitator
 		end
 
 		def populate_repos_to_sidebar
-			repo_sidebar = {}
-			repo_sidebar[:own] = ['Own repos','Repos you own and aren\'t forked'] unless @repos_hash[:own].empty?
-			repo_sidebar[:forked] = ['Forked repos','Repos you have forked'] unless @repos_hash[:forked].empty?
-			repo_sidebar[:contri] = ['Contri repos','Repos you have contributed to'] unless @repos_hash[:contri].empty?
+			repo_sidebar = []
+			repo_sidebar << ['own','Repos you own and aren\'t forked'] unless @repos_hash[:own].empty?
+			repo_sidebar << ['forked','Repos you have forked'] unless @repos_hash[:forked].empty?
+			repo_sidebar << ['contri','Repos you have contributed to'] unless @repos_hash[:contri].empty?
 			@sidebar[:repos] = repo_sidebar
 		end
 
 		def set_orgs(username)
-			@sidebar[:orgs] = Hash[client.organizations(username).map(&:login).map{|o| [o,[o,'']]}]
+			@sidebar[:orgs] = client.organizations(username).map(&:login).map{|o| [o,'']}
 		end
 
 		def set_locn
-			@sidebar[:locn] =  {:locn => [@user_info.location,'']}
+			@sidebar[:locn] =  [@user_info.location,'']
 		end
 
 		def own_repo?(repo)
