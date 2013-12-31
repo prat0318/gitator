@@ -195,6 +195,7 @@ module Gitator
 			 	:owner => r.owner.login, 
 			 	:forks => r.forks,
         :watchers => r.watchers, 
+        :description => r.description,
         :score => r.score, 
         :match => r.text_matches.map do |tm|
                   	{

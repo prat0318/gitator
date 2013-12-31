@@ -85,10 +85,13 @@
     }
 
     function buildRepoPanel(object) {
-    	footerHtml = forkWithCount(addCommas("32323"));
-    	html = '<div class="panel panel-info"><div class="panel-heading">'+
-                object.owner+'/'+object.name+'</div><div class="panel-body">bla-bla'+
-                    				'</div><div class="panel-footer">'+footerHtml+'</div></div>';
+    	footerHtml = forkWithCountButton(addCommas(object.forks)) + 
+    				 starWithCountButton(addCommas(object.watchers)) +
+    				 followButton(object.owner);
+    	html = '<div class="panel panel-info"><div class="panel-heading"><span style="font-weight:bold">'+
+                object.owner+'/'+object.name+'</span> - "'+object.description.substr(0,80)+ 
+                '"</div><div class="panel-body">bla-bla'+
+                '</div><div class="panel-footer">&nbsp;'+footerHtml+'</div></div>';
 		$(html).hide().appendTo("#suggestion").fadeIn(500);
     }
 
@@ -125,9 +128,18 @@
         });
     }
 
-    function forkWithCount(n) {
+    function forkWithCountButton(n) {
     	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="#" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Fork</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
     }
+
+    function starWithCountButton(n) {
+    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="#" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Star</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
+    }
+
+    function followButton(n) {
+    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="#" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Follow @'+n+'</span></a></span>'
+    }
+
     // Add commas to numbers
 	function addCommas(n) {
 	  return String(n).replace(/(\d)(?=(\d{3})+$)/g, '$1,')
