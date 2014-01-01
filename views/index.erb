@@ -79,6 +79,21 @@
 		ajaxCall(e);
     }
 
+    function cut(text) {
+    	var maxCharLen = 35
+        var short = text.substr(0, maxCharLen);
+        var isTrimmed = (short.length == maxCharLen)
+        if (/^\S/.test(text.substr(maxCharLen)))
+            short = short.replace(/\s+\S*$/, "");
+        return (isTrimmed ? short+"..." : short);
+    }
+
+    function show_matchings(match_arr){
+    	str = "Matches: "
+    	$.each(match_arr, function(i, item) {str += "("+ cut(item.fragment)+") "});
+    	return str;
+    }
+
     function getName(divId) {
     	var divString = "#"+divId;
     	return $($($(divString).find(".active").last()).children()[0]).attr('name');
@@ -90,14 +105,14 @@
     				 followButton(object.owner);
     	html = '<div class="panel panel-info"><div class="panel-heading"><span style="font-weight:bold">'+
                 object.owner+'/'+object.name+'</span> - "'+object.description.substr(0,80)+ 
-                '"</div><div class="panel-body">bla-bla'+
+                '"</div><div class="panel-body">'+ show_matchings(object.match) +
                 '</div><div class="panel-footer">&nbsp;'+footerHtml+'</div></div>';
 		$(html).hide().appendTo("#suggestion").fadeIn(500);
     }
 
     function buildUserPanel(object) {
     	html = '<div class="panel panel-info"><div class="panel-body">'+
-                    				object.login+'/'+object.type+'</div></div>';
+                    				object.login+'/'+object.type+' - '+object.name+'</div></div>';
 		$(html).hide().appendTo("#suggestion").fadeIn(500);
     }
 

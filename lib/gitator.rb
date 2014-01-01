@@ -10,7 +10,7 @@ module Gitator
 	class Main
 		attr_accessor :client, :username, :repos, :is_client_auth, :lang
 		attr_accessor :repos_hash, :logger, :user_info, :following, :org_members
-		attr_accessor :sidebar
+		attr_accessor :sidebar, :users_cache
 
 		LANG_COUNT = 4
 		REPO_DESCR_COUNT = 6
@@ -30,7 +30,7 @@ module Gitator
 			@username = client.login || options[:owner]
 			@is_client_auth = !!client.login
 			@lang = []; @sidebar = {}; @following = [@username]
-			@org_members = {}
+			@org_members = {}; @users_cache = {}
 			init_logger
 
 			username = @username if !@is_client_auth
@@ -108,7 +108,8 @@ module Gitator
 			search_string += " location:#{options[:locn]}" unless options[:locn].nil?
 			# @logger.info("String to be searched : #{search_string}")
 			result = @client.search_users(search_string, {:per_page => SEARCH_RESULT})
-			result.items.reject{|r| @following.include? r.login}[0..(SHOW_SUGG-1)]
+			result.items.reject{|r| #@users_cache[r.id] = r.rels[:self].get.data
+			                        @following.include? r.login}[0..(SHOW_SUGG-1)]
 		end
 
 		def parse_descriptions(repos)
@@ -183,7 +184,8 @@ module Gitator
 				{
 					:login => r.login,
 					:type => r.type,
-					:gravatar_id => r.gravatar_id
+					:gravatar_id => r.gravatar_id,
+					# :name => @users_cache[r.id].name
 				}
 			end
 		end
