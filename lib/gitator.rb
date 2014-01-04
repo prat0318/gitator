@@ -179,6 +179,10 @@ module Gitator
 			}.to_json
 		end
 
+		def get_profile_info(id)
+			@client.user(id).attrs.to_json
+		end
+
 		def format_user_result(result)
 			result.map do |r|
 				{

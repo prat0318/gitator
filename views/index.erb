@@ -71,6 +71,27 @@
     		ajaxCall(e);
     });
 
+    function showProfileInfo(e) {
+        $.ajax({
+            type: "GET",
+            url: "/profile_info",
+            data: {id: e.id},
+            success: function(data){
+                data = $.parseJSON(data);
+                $("#"+e.id+"-line1").append('<b>'+data.name+'</b>');
+                if(data.blog) 
+                    $("#"+e.id+"-line1").append('<a href="'+data.blog+'"> ( '+ data.blog+' )</a>');
+                if(data.company)
+                    $("#"+e.id+"-line2").append(data.company + ', ');
+                $("#"+e.id+"-line2").append(data.location);
+                footerHTML = ghWithCountButton('Repos', addCommas(data.public_repos), '#') +
+                             ghWithCountButton('Gists', addCommas(data.public_gists), '#') +
+                             ghWithCountButton('Follow @'+data.login, addCommas(data.followers), '#');
+                $("#"+e.id+"-footer").append('&nbsp;'+footerHTML)
+            },
+        });
+    }
+
     function updateSidebar(e){		
 		$(".category").hide()
 		$(".category").removeClass("active")
@@ -100,19 +121,34 @@
     }
 
     function buildRepoPanel(object) {
-    	footerHtml = forkWithCountButton(addCommas(object.forks)) + 
-    				 starWithCountButton(addCommas(object.watchers)) +
-    				 followButton(object.owner);
+    	footerHtml = ghWithCountButton('Fork', addCommas(object.forks), '#') + 
+    				 ghWithCountButton('Star', addCommas(object.watchers), '#') +
+    				 ghButton('Follow @'+object.owner, '#');
     	html = '<div class="panel panel-info"><div class="panel-heading"><span style="font-weight:bold">'+
-                object.owner+'/'+object.name+'</span> - "'+object.description.substr(0,80)+ 
+                object.owner+'/'+object.name+'</span> - "'+object.description.substr(0,70)+ 
                 '"</div><div class="panel-body">'+ show_matchings(object.match) +
                 '</div><div class="panel-footer">&nbsp;'+footerHtml+'</div></div>';
 		$(html).hide().appendTo("#suggestion").fadeIn(500);
     }
 
     function buildUserPanel(object) {
-    	html = '<div class="panel panel-info"><div class="panel-body">'+
-                    				object.login+'/'+object.type+' - '+object.name+'</div></div>';
+        id = object.login
+    	html ='<div class="panel panel-success">'+
+                    '<div class="panel-heading">'+
+                        '<span style="font-weight:bold">@'+id+'</span> ( '+object.type+' ) '+
+                         '<button type="button" id='+id+' class="btn btn-default btn-xs"'+
+                         ' onclick="showProfileInfo(this)">'+
+                            '<span class="glyphicon glyphicon-info-sign" style="color:#3C763D"></span>'+
+                         '</button>'+
+                     '</div>'+
+                     '<div class="panel-body" style="padding: 0px" id="'+id+'-body">'+
+                        '<img style="float:left" src="http://gravatar.com/avatar/'+object.gravatar_id+'">'+
+                        '</img>'+
+                        '<div style="float:left; padding: 15px; color: #3C763D"><span id="'+id+'-line1"/><br/><span id="'+id+'-line2"/></div>'+
+                     '</div>'+
+                     '<div class="panel-footer" id="'+id+'-footer">'+
+                     '</div>'+
+                 '</div>';
 		$(html).hide().appendTo("#suggestion").fadeIn(500);
     }
 
@@ -143,17 +179,21 @@
         });
     }
 
-    function forkWithCountButton(n) {
-    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="#" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Fork</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
+    function ghWithCountButton(name, n, href) {
+    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
     }
 
-    function starWithCountButton(n) {
-    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="#" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Star</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
+    // function starWithCountButton(n) {
+    // 	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Star</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
+    // }
+
+    function ghButton(name, href) {
+        return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a></span>'
     }
 
-    function followButton(n) {
-    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="#" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Follow @'+n+'</span></a></span>'
-    }
+    // function followWithCountButton(name, n, href) {
+    //     return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Follow @'+name+'</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
+    // }
 
     // Add commas to numbers
 	function addCommas(n) {

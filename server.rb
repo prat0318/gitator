@@ -43,6 +43,10 @@ module Gitator
       settings.main.send("get_#{param[:search_type]}_suggestions", param)
     end
 
+    get '/profile_info' do
+      settings.main.send("get_profile_info", params["id"])
+    end
+
     get '/' do
 
       if !authenticated?
