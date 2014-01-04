@@ -21,6 +21,7 @@ module Gitator
 		SINGLE = 1
 		SEARCH_RESULT=10
 		SHOW_SUGG = 6
+		MAX_SEARCH_LENGTH=1355
 		ALL_LANGS = %w{JavaScript Ruby Java PHP Python C++ C Objective-C C# Shell CSS
     	      Perl CoffeeScript VimL Scala Go Prolog Clojure Haskell Lua}.sort
 		@@extractor ||= Phrasie::Extractor.new
@@ -102,11 +103,14 @@ module Gitator
 		def call_api_to_suggest_users(for_lang, options)
 			search_string = ""
 			search_string += " language:#{for_lang}" unless for_lang.nil?
-			unless options[:org_members].nil? 
-				options[:org_members].each {|member| search_string += " user:#{member}" }
-			end
 			search_string += " location:#{options[:locn]}" unless options[:locn].nil?
-			# @logger.info("String to be searched : #{search_string}")
+			unless options[:org_members].nil? 
+				options[:org_members].each_with_index do |member, i| 
+											  search_string += " user:#{member}"
+					                          break if search_string.size > MAX_SEARCH_LENGTH
+					                      end
+			end
+			@logger.info("String to be searched : #{search_string}")
 			result = @client.search_users(search_string, {:per_page => SEARCH_RESULT})
 			result.items.reject{|r| #@users_cache[r.id] = r.rels[:self].get.data
 			                        @following.include? r.login}[0..(SHOW_SUGG-1)]
