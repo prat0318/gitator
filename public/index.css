@@ -14,3 +14,8 @@
 .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
 	background-color: #EBF1F5;
 }
+
+a {
+    text-decoration: none; 
+    color: inherit; 
+}

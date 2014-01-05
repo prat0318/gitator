@@ -17,8 +17,8 @@
   <div class="container">
     <img style="float:right" src="http://gravatar.com/avatar/<%=@main.user_info.gravatar_id%>"></img>
 	<div class="page-header" style="margin:0 0 30px">
-	  <h1>Gitator <small>Find awesome repos which best suit your profile!
-	  <span style="float:right; line-height: 2; margin-right:10px">@<%=@main.username%></span>
+	  <h1><a href="/">Gitator</a><small> Find awesome repos which best suit your profile!
+	  <a href="http://github.com/<%=@main.username%>" style="float:right; line-height: 2; margin-right:10px">@<%=@main.username%></a>
 	  </small></h1>
 	</div>
 
@@ -65,6 +65,10 @@
 		</ul>
   	</div>
   </div>
+  <div id="footer">
+     <a role="button" class="btn btn-default btn-primary btn-sm" style="margin:auto; display:block; width:170px" href="http://github.com/prat0318/gitator/issues/new">
+      <span class="glyphicon glyphicon-envelope"></span> Feedback/Suggestions</a>
+  </div>
 </body>
 </html>
 
@@ -98,9 +102,9 @@
                 if(data.company)
                     $("#"+e.id+"-line2").append(data.company + ', ');
                 $("#"+e.id+"-line2").append(data.location);
-                footerHTML = ghWithCountButton('Repos', addCommas(data.public_repos), '#') +
-                             ghWithCountButton('Gists', addCommas(data.public_gists), '#') +
-                             ghWithCountButton('Follow @'+data.login, addCommas(data.followers), '#');
+                footerHTML = ghWithCountButton('Repos', addCommas(data.public_repos), 'http://github.com/'+             data.login+'?tab=repositories') +
+                             ghWithCountButton('Gists', addCommas(data.public_gists), 'http://gist.github.com/'+data.login) +
+                             ghWithCountButton('Follow @'+data.login, addCommas(data.followers), 'http://github.com/'+data.login);
                 $("#"+e.id+"-footer").append('&nbsp;'+footerHTML)
             },
         });
@@ -151,11 +155,12 @@
     }
 
     function buildRepoPanel(object) {
-    	footerHtml = ghWithCountButton('Fork', addCommas(object.forks), '#') + 
-    				 ghWithCountButton('Star', addCommas(object.watchers), '#') +
-    				 ghButton('Follow @'+object.owner, '#');
-    	html = '<div class="panel panel-info"><div class="panel-heading"><span style="font-weight:bold">'+
-                object.owner+'/'+object.name+'</span> - "'+object.description.substr(0,70)+ 
+        repo_name = object.owner+'/'+object.name
+        footerHtml = ghWithCountButton('Fork', addCommas(object.forks), 'http://github.com/'+repo_name) + 
+                     ghWithCountButton('Star', addCommas(object.watchers),'http://github.com/'+repo_name) +
+                     ghButton('Follow @'+object.owner, 'http://github.com/'+object.owner);
+    	html = '<div class="panel panel-info"><div class="panel-heading"><a href="http://github.com/'+repo_name+'" style="font-weight:bold">'+
+                repo_name+'</a> - "'+object.description.substr(0,70)+ 
                 '"</div><div class="panel-body">'+ show_matchings(object.match, object.score) +
                 '</div><div class="panel-footer">&nbsp;'+footerHtml+'</div></div>';
 		$(html).hide().appendTo("#suggestion").fadeIn(500);
@@ -223,7 +228,9 @@
     }
 
     function ghWithCountButton(name, n, href) {
-    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
+        var countType = {'Fork': '/network', 'Star': '/stargazers'}
+        var countTypeName = countType[name] ? countType[name] : ''
+    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a><a class="gh-count" id="gh-count" href="'+href+countTypeName+'" target="_blank" style="">'+n+'</a></span>'
     }
 
     // function starWithCountButton(n) {
