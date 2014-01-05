@@ -59,7 +59,7 @@
 			<% @main.sidebar.each do |k,v| %>
 				<% v.each do |val| %>
 					<li style="display:none" class="<%=k%> category"><a class="height-120" href="#" data-toggle="pill" name="<%=val[0]%>">
-					<%=val[0]%></a></li>
+					<%=val[0]%><br/><span style="font-size: 50%"><%=val[1]%></span></a></li>
 				<% end %>
 			<% end %>
 		</ul>
