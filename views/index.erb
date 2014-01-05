@@ -209,8 +209,14 @@
                 		});
                 },
                 error: function(response, q, t){
-                        $("#alert-danger-text").html("Oops! Something went wrong. Please try again.")
-                        $("#alert-danger").show("slow")
+                    $("#suggestion").empty();
+                    var msg = "Oops! "+ response.responseJSON.type
+                    if(response.responseJSON.type == "Octokit::TooManyRequests")
+                        msg += ". My API Limit exceeded :( Try instead logging from your GitHub a/c."
+                    else
+                        msg += ". Please try again after some time."       
+                    $("#alert-danger-text").html(msg)
+                    $("#alert-danger").show("slow")
                 }
             }, 20);
         });

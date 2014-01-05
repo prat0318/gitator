@@ -94,9 +94,9 @@ module Gitator
 			search_string += " language:#{for_lang}" unless for_lang.nil?
 			search_string += " pushed:>#{since}"
 			result = @client.search_repositories(search_string, {:per_page => SEARCH_RESULT,
-																													 :headers => { :accept =>
-																													 	'application/vnd.github.v3.text-match+json'
-																													 	}})
+																 :headers => { :accept =>
+																 	'application/vnd.github.v3.text-match+json'
+																 	}})
 			result.items.reject{|r| @repos.map(&:name).include? r.name}[0..(SHOW_SUGG-1)]
 		end
 
@@ -110,7 +110,7 @@ module Gitator
 					                          break if search_string.size > MAX_SEARCH_LENGTH
 					                      end
 			end
-			@logger.info("String to be searched : #{search_string}")
+			#@logger.info("String to be searched : #{search_string}")
 			result = @client.search_users(search_string, {:per_page => SEARCH_RESULT})
 			result.items.reject{|r| #@users_cache[r.id] = r.rels[:self].get.data
 			                        @following.include? r.login}[0..(SHOW_SUGG-1)]
@@ -193,7 +193,6 @@ module Gitator
 					:login => r.login,
 					:type => r.type,
 					:gravatar_id => r.gravatar_id,
-					# :name => @users_cache[r.id].name
 				}
 			end
 		end
@@ -204,18 +203,18 @@ module Gitator
 			 	:name => r.name, 
 			 	:owner => r.owner.login, 
 			 	:forks => r.forks,
-        :watchers => r.watchers, 
-        :description => r.description,
-        :score => r.score, 
-        :match => r.text_matches.map do |tm|
-                  	{
-                  		:fragment => tm.fragment, 
-                  		:matches => tm.matches.map(&:text)
-                  	}
-                  end
-        }
-      end
-    end
+		        :watchers => r.watchers, 
+		        :description => r.description,
+		        :score => r.score, 
+		        :match => r.text_matches.map do |tm|
+		                  	{
+		                  		:fragment => tm.fragment, 
+		                  		:matches => tm.matches.map(&:text)
+		                  	}
+		                  end
+	        }
+	      end
+	    end
 
 		def with_logging(desc)
 			start = Time.now

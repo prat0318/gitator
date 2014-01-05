@@ -58,7 +58,11 @@ module Gitator
     get '/suggest' do
       @main = get_client(params)
       param = Hash[params.map{ |k, v| [k.to_sym, v] }]
-      @main.send("get_#{param[:search_type]}_suggestions", param)
+      begin
+        @main.send("get_#{param[:search_type]}_suggestions", param)
+      rescue Exception => e
+        [500, {'Content-Type' => 'application/json'}, [{:type => e.class.to_s}.to_json]]
+      end
     end
 
     get '/profile_info' do
