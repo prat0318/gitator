@@ -61,6 +61,7 @@ module Gitator
       begin
         @main.send("get_#{param[:search_type]}_suggestions", param)
       rescue Exception => e
+        @main.logger.error(e.inspect+"\n\t"+e.backtrace[0..10].join("\n\t"))
         [500, {'Content-Type' => 'application/json'}, [{:type => e.class.to_s}.to_json]]
       end
     end
