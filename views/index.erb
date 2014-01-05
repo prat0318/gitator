@@ -45,6 +45,14 @@
 			    </ul>
 			  </li>
 			</ul>
+         <div id="alert-warning" style="display:none" class="alert alert-warning">
+            <button type="button" class="close" onclick="$('#alert-warning').hide('slow')" aria-hidden="true">&times;</button>
+            <div id="alert-warning-text"></div>
+         </div>
+         <div id="alert-danger" style="display:none" class="alert alert-danger">
+            <button type="button" class="close" onclick="$('#alert-danger').hide('slow')" aria-hidden="true">&times;</button>
+            <div id="alert-danger-text"></div>
+         </div>
 			<div id="suggestion"></div>
 		</div>
 		<ul id="category" class="nav nav-pills nav-stacked" style="width:30%; float:left; margin:5px; padding-top: 60px">
@@ -161,7 +169,7 @@
                          '<button type="button" id='+id+' class="btn btn-default btn-xs"'+
                          ' onclick="showProfileInfo(this)">'+
                             '<span class="glyphicon glyphicon-info-sign" style="color:#3C763D"></span>'+
-                         '</button>'+
+                         ' More Info</button>'+
                      '</div>'+
                      '<div class="panel-body" style="padding: 0px" id="'+id+'-body">'+
                         '<img style="float:left" src="http://gravatar.com/avatar/'+object.gravatar_id+'">'+
@@ -176,6 +184,7 @@
 
     function ajaxCall(e) {
 		if(e && e.target.id == "lang-dropdown") return;
+        $("#alert-danger").hide(); $("#alert-warning").hide();
 		setTimeout(function () {
         	$.ajax({
                 type: "GET",
@@ -191,7 +200,8 @@
                 		data = $.parseJSON(data);
                 		$("#suggestion").empty();
                 		if(!data.suggestions || (data.suggestions.length == 0)) {
-                			$("#suggestion").html("Error! No Data found :(")
+                            $("#alert-warning-text").html("No relevant matches found! :( Try something else!"); 
+                            $("#alert-warning").show("slow")
             				return
                 		}
                 		$.each(data.suggestions, function(index, object){
@@ -199,7 +209,8 @@
                 		});
                 },
                 error: function(response, q, t){
-                        $("#suggestion").html("Oops! Something went wrong.")
+                        $("#alert-danger-text").html("Oops! Something went wrong. Please try again.")
+                        $("#alert-danger").show("slow")
                 }
             }, 20);
         });
