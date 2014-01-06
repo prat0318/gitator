@@ -80,7 +80,7 @@ module Gitator
     end
 
     def log_error(e)
-        @logger = Logger.new('gitator.log', 10, 1024000)
+        @logger = Logger.new('logs/gitator.log', 10, 1024000)
         @logger.error(e.inspect+"\n\t"+e.backtrace[0..10].join("\n\t"))
     end
   end
