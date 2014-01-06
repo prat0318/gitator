@@ -61,6 +61,10 @@ module Gitator
       erb :index
     end
 
+    get '/404' do
+      erb :not_found
+    end
+
     get '/suggest' do
       param = Hash[params.map{ |k, v| [k.to_sym, v] }]
       method_name = "get_#{param[:search_type]}_suggestions"
