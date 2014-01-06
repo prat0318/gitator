@@ -12,13 +12,13 @@
 <body>
 
   <div id="loadingDiv" class="loading"></div>
-  <a href="https://github.com/prat0318/gitator"><img style="position:absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+  <a href="https://github.com/prat0318/gitator"><img id="ribbon" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
 
   <div class="container">
     <img style="float:right" src="http://gravatar.com/avatar/<%=@main.user_info.gravatar_id%>"></img>
-	<div class="page-header" style="margin:0 0 30px">
+	<div class="page-header">
 	  <h1><a href="/">Gitator</a><small> Find awesome repos which best suit your profile!
-	  <a href="http://github.com/<%=@main.username%>" style="float:right; line-height: 2; margin-right:10px">@<%=@main.username%></a>
+	  <a href="http://github.com/<%=@main.username%>" id="username-text">@<%=@main.username%></a>
 	  </small></h1>
 	</div>
 
@@ -55,7 +55,7 @@
          </div>
 			<div id="suggestion"></div>
 		</div>
-		<ul id="category" class="nav nav-pills nav-stacked" style="width:30%; float:left; margin:5px; padding-top: 60px">
+		<ul id="category" class="nav nav-pills nav-stacked" style="">
 			<% @main.sidebar.each do |k,v| %>
 				<% v.each do |val| %>
 					<li style="display:none" class="<%=k%> category"><a class="height-120" href="#" data-toggle="pill" name="<%=val[0]%>">
@@ -66,7 +66,7 @@
   	</div>
   </div>
   <div id="footer">
-     <a role="button" class="btn btn-default btn-primary btn-sm" style="margin:auto; display:block; width:170px" href="http://github.com/prat0318/gitator/issues/new">
+     <a role="button" class="btn btn-default btn-primary btn-sm" id="footer-button" href="http://github.com/prat0318/gitator/issues/new">
       <span class="glyphicon glyphicon-envelope"></span> Feedback/Suggestions</a>
   </div>
 </body>
@@ -77,10 +77,10 @@
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 <script>
     $(".nav").click(function(e){
-    	if($(e.target).hasClass("search-type"))
-    		setTimeout( function(){updateSidebar(e)}, 10);
-    	else
-    		ajaxCall(e);
+        if($(e.target).hasClass("search-type"))
+            setTimeout( function(){updateSidebar(e)}, 10);
+        else
+            ajaxCall(e);
     });
 
     function showProfileInfo(e) {
@@ -110,16 +110,16 @@
         });
     }
 
-    function updateSidebar(e){		
-		$(".category").hide()
-		$(".category").removeClass("active")
-		$("."+getName("search-type")).show()
-		$($("#category").children(":visible").first()).addClass("active")
-		ajaxCall(e);
+    function updateSidebar(e){      
+        $(".category").hide()
+        $(".category").removeClass("active")
+        $("."+getName("search-type")).show()
+        $($("#category").children(":visible").first()).addClass("active")
+        ajaxCall(e);
     }
 
     function cut(text) {
-    	var maxCharLen = 35
+        var maxCharLen = 35
         var short = text.substr(0, maxCharLen);
         var isTrimmed = (short.length == maxCharLen)
         if (/^\S/.test(text.substr(maxCharLen)))
@@ -128,8 +128,8 @@
     }
 
     function show_matchings(match_arr, score){
-    	str = '<M style="color:#023752"><m style="color:#31708F">Matches: </m>'
-    	$.each(match_arr, function(i, item) {str += "\""+ cut(item.fragment)+"\"&nbsp;&nbsp;"});
+        str = '<M style="color:#023752"><m style="color:#31708F">Matches: </m>'
+        $.each(match_arr, function(i, item) {str += "\""+ cut(item.fragment)+"\"&nbsp;&nbsp;"});
         str+= ('<br/><m style="color:#31708F">Match Score: </m>'+score.toFixed(2)+'&nbsp;&nbsp;')
         keywords = {}
         $.each(match_arr, function(i, item_arr) {
@@ -146,12 +146,12 @@
             str+= ('<span style="padding-right:15px;"><b>'+i+' </b><span class="badge">'+item+'</span></span>')
         });
         str += '</m></M>'
-    	return str;
+        return str;
     }
 
     function getName(divId) {
-    	var divString = "#"+divId;
-    	return $($($(divString).find(".active").last()).children()[0]).attr('name');
+        var divString = "#"+divId;
+        return $($($(divString).find(".active").last()).children()[0]).attr('name');
     }
 
     function buildRepoPanel(object) {
@@ -159,16 +159,16 @@
         footerHtml = ghWithCountButton('Fork', addCommas(object.forks), 'http://github.com/'+repo_name) + 
                      ghWithCountButton('Star', addCommas(object.watchers),'http://github.com/'+repo_name) +
                      ghButton('Follow @'+object.owner, 'http://github.com/'+object.owner);
-    	html = '<div class="panel panel-info"><div class="panel-heading"><a href="http://github.com/'+repo_name+'" style="font-weight:bold">'+
+        html = '<div class="panel panel-info"><div class="panel-heading"><a href="http://github.com/'+repo_name+'" style="font-weight:bold">'+
                 repo_name+'</a> - "'+object.description.substr(0,70)+ 
                 '"</div><div class="panel-body">'+ show_matchings(object.match, object.score) +
                 '</div><div class="panel-footer">&nbsp;'+footerHtml+'</div></div>';
-		$(html).hide().appendTo("#suggestion").fadeIn(500);
+        $(html).hide().appendTo("#suggestion").fadeIn(500);
     }
 
     function buildUserPanel(object) {
         id = object.login
-    	html ='<div class="panel panel-success">'+
+        html ='<div class="panel panel-success">'+
                     '<div class="panel-heading">'+
                         '<span style="font-weight:bold">@'+id+'</span> ( '+object.type+' ) '+
                          '<button type="button" id='+id+' class="btn btn-default btn-xs"'+
@@ -184,34 +184,34 @@
                      '<div class="panel-footer" id="'+id+'-footer">'+
                      '</div>'+
                  '</div>';
-		$(html).hide().appendTo("#suggestion").fadeIn(500);
+        $(html).hide().appendTo("#suggestion").fadeIn(500);
     }
 
     function ajaxCall(e) {
-		if(e && e.target.id == "lang-dropdown") return;
+        if(e && e.target.id == "lang-dropdown") return;
         $("#alert-danger").hide(); $("#alert-warning").hide();
-		setTimeout(function () {
-        	$.ajax({
+        setTimeout(function () {
+            $.ajax({
                 type: "GET",
                 url: "/suggest",
                 data: {
                        username: '<%=@main.username%>',
                        lang: getName("lang"), 
-                	   category: getName("category"),
-                	   search_type: getName("search-type"),
+                       category: getName("category"),
+                       search_type: getName("search-type"),
                        public: getParameterByName('public')
                       },                       
                 success: function(data){
-                		data = $.parseJSON(data);
-                		$("#suggestion").empty();
-                		if(!data.suggestions || (data.suggestions.length == 0)) {
+                        data = $.parseJSON(data);
+                        $("#suggestion").empty();
+                        if(!data.suggestions || (data.suggestions.length == 0)) {
                             $("#alert-warning-text").html("No relevant matches found! :( Try something else!"); 
                             $("#alert-warning").show("slow")
-            				return
-                		}
-                		$.each(data.suggestions, function(index, object){
-                			window["build"+data.type+"Panel"](object)
-                		});
+                            return
+                        }
+                        $.each(data.suggestions, function(index, object){
+                            window["build"+data.type+"Panel"](object)
+                        });
                 },
                 error: function(response, q, t){
                     $("#suggestion").empty();
@@ -230,38 +230,16 @@
     function ghWithCountButton(name, n, href) {
         var countType = {'Fork': '/network', 'Star': '/stargazers'}
         var countTypeName = countType[name] ? countType[name] : ''
-    	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a><a class="gh-count" id="gh-count" href="'+href+countTypeName+'" target="_blank" style="">'+n+'</a></span>'
+        return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a><a class="gh-count" id="gh-count" href="'+href+countTypeName+'" target="_blank" style="">'+n+'</a></span>'
     }
-
-    // function starWithCountButton(n) {
-    // 	return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Star</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
-    // }
 
     function ghButton(name, href) {
         return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a></span>'
     }
 
-    // function followWithCountButton(name, n, href) {
-    //     return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">Follow @'+name+'</span></a><a class="gh-count" id="gh-count" href="#" target="_blank" style="">'+n+'</a></span>'
-    // }
-
-    // Add commas to numbers
-	function addCommas(n) {
-	  return String(n).replace(/(\d)(?=(\d{3})+$)/g, '$1,')
-	}
-
-    var $loading = $('#loadingDiv').fadeTo(0, 0);
-	$(document)
-	  .ajaxStart(function () {
-	    $loading.fadeTo(600, 1);
-	  })
-	  .ajaxStop(function () {
-	    $loading.fadeTo(600, 0);
-	  });
-	$("."+getName("search-type")).show()
-	$($("#category").children(":visible").first()).addClass("active")
-	$($("#lang").children().first()).addClass("active")
-	ajaxCall(null);
+    function addCommas(n) {
+      return String(n).replace(/(\d)(?=(\d{3})+$)/g, '$1,')
+    }
 
     function getParameterByName(name) {
         name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
@@ -269,4 +247,18 @@
             results = regex.exec(location.search);
         return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
+
+    var $loading = $('#loadingDiv').fadeTo(0, 0);
+    $(document)
+      .ajaxStart(function () {
+        $loading.fadeTo(600, 1);
+      })
+      .ajaxStop(function () {
+        $loading.fadeTo(600, 0);
+      });
+    $("."+getName("search-type")).show()
+    $($("#category").children(":visible").first()).addClass("active")
+    $($("#lang").children().first()).addClass("active")
+    ajaxCall(null);
+
 </script>

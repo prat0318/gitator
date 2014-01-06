@@ -1,10 +1,3 @@
-.loading {
-    display: block;
-    background: url('spinner.gif') no-repeat center;
-    height: 30px;
-    margin: 0 auto;
-}
-
 .height-120 {
 	height: 120px;
 	text-align: center;
@@ -18,4 +11,55 @@
 a {
     text-decoration: none; 
     color: inherit; 
+}
+
+#ribbon {
+	position:absolute; 
+	top: 0; 
+	right: 0; 
+	border: 0;
+}
+
+.page-header {
+	margin:0 0 30px;
+}
+
+#username-text {
+	float:right; 
+	line-height: 2; 
+	margin-right:10px
+}
+
+#category {
+	width:30%; 
+	float:left; 
+	margin:5px; 
+	padding-top: 60px;
+}
+
+#footer-button {
+	margin:auto; 
+	display:block; 
+	width:170px
+}
+
+.container {
+	padding-top: 30px;
+}
+
+.loading
+{
+    display: none;
+    width:100px;
+    height: 100px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    background:url('spinner.gif') no-repeat center;
+    text-align:center;
+    padding:10px;
+    z-index:2;
+    overflow: auto;
+    -moz-border-radius: 45px;
+    border-radius: 45px;
 }
