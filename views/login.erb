@@ -108,6 +108,7 @@
                              ghWithCountButton('Follow @'+data.login, addCommas(data.followers), 'http://github.com/'+data.login);
                 $("#"+e.id+"-footer").append('&nbsp;'+footerHTML)
             },
+            error: function(response) { showErrorMessage(response); },
         });
     }
 
@@ -215,18 +216,20 @@
                             window["build"+data.type+"Panel"](object)
                         });
                 },
-                error: function(response, q, t){
-                    $("#suggestion").empty();
-                    var msg = "Oops! "+ response.responseJSON.type
-                    if(response.responseJSON.type == "Octokit::TooManyRequests")
-                        msg += ". My API Limit exceeded :( Try instead logging from your GitHub a/c."
-                    else
-                        msg += ". Please try again after some time."       
-                    $("#alert-danger-text").html(msg)
-                    $("#alert-danger").show("slow")
-                }
+                error: function(response) { showErrorMessage(response); },
             }, 20);
         });
+    }
+
+    function showErrorMessage(response) {
+        $("#suggestion").empty();
+        var msg = "Oops! "+ response.responseJSON.type
+        if(response.responseJSON.type == "Octokit::TooManyRequests")
+            msg += ". My API Limit exceeded :( Try instead logging from your GitHub a/c."
+        else
+            msg += ". Please try again after some time."       
+        $("#alert-danger-text").html(msg)
+        $("#alert-danger").show("slow")
     }
 
     function ghWithCountButton(name, n, href) {

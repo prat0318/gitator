@@ -50,13 +50,11 @@ module Gitator
       begin
         @main = get_client(params, true)
       rescue Octokit::NotFound => e
-        log_error e
-        return erb :not_found, :locals => {}
+        return log_error_and_render e, :not_found
       rescue Exception => e
-        log_error e
-        return erb :error
+        return log_error_and_render e, :error
       end
-      erb :login, :locals => {}
+      erb :login
     end
 
     get '/' do
@@ -64,19 +62,33 @@ module Gitator
     end
 
     get '/suggest' do
-      @main = get_client(params)
       param = Hash[params.map{ |k, v| [k.to_sym, v] }]
-      begin
-        @main.send("get_#{param[:search_type]}_suggestions", param)
-      rescue Exception => e
-        log_error e
-        [500, {'Content-Type' => 'application/json'}, [{:type => e.class.to_s}.to_json]]
-      end
+      method_name = "get_#{param[:search_type]}_suggestions"
+      call_backend method_name, param
     end
 
     get '/profile_info' do
+      method_name = "get_profile_info"
+      call_backend method_name, params["id"]
+    end
+
+    def call_backend method_name, args
       @main = get_client(params)
-      @main.send("get_profile_info", params["id"])
+      begin
+        @main.send(method_name, args)
+      rescue Exception => e
+        return log_error_and_render_json e
+      end
+    end
+
+    def log_error_and_render(e, page)
+      log_error e
+      erb page
+    end
+
+    def log_error_and_render_json e
+      log_error e
+      [500, {'Content-Type' => 'application/json'}, [{:type => e.class.to_s}.to_json]]
     end
 
     def log_error(e)
