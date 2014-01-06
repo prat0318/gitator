@@ -41,9 +41,9 @@ module Gitator
 			end
 		end
 	
-	  def init_logger
+	    def init_logger
 		  @logger = Logger.new(STDOUT)
-			@logger.level = Logger::INFO
+		  @logger.level = Logger::INFO
 		end
 		
 		def set_repos

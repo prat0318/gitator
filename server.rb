@@ -4,6 +4,7 @@ require 'octokit'
 require 'json'
 require 'pp'
 require 'uri'
+require "logger"
 
 module Gitator
   class App < Sinatra::Base
@@ -49,7 +50,11 @@ module Gitator
       begin
         @main = get_client(params, true)
       rescue Octokit::NotFound => e
-        return erb :not_found, :locals => {:error => "#{params["username"]} not found!"}
+        log_error e
+        return erb :not_found, :locals => {}
+      rescue Exception => e
+        log_error e
+        return erb :error
       end
       erb :login, :locals => {}
     end
@@ -64,7 +69,7 @@ module Gitator
       begin
         @main.send("get_#{param[:search_type]}_suggestions", param)
       rescue Exception => e
-        @main.logger.error(e.inspect+"\n\t"+e.backtrace[0..10].join("\n\t"))
+        log_error e
         [500, {'Content-Type' => 'application/json'}, [{:type => e.class.to_s}.to_json]]
       end
     end
@@ -72,6 +77,11 @@ module Gitator
     get '/profile_info' do
       @main = get_client(params)
       @main.send("get_profile_info", params["id"])
+    end
+
+    def log_error(e)
+        @logger = Logger.new(STDOUT)
+        @logger.error(e.inspect+"\n\t"+e.backtrace[0..10].join("\n\t"))
     end
   end
 end
