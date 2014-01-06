@@ -50,7 +50,7 @@ module Gitator
       begin
         @main = get_client(params)
       rescue Octokit::NotFound => e
-        return erb :not_found, :locals => {:error => "#{owner} not found!"}
+        return erb :not_found, :locals => {:error => "#{params["username"]} not found!"}
       end
       erb :index, :locals => {}
     end
