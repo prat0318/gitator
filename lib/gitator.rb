@@ -22,7 +22,7 @@ module Gitator
 		MAX_SEARCH_LENGTH=1355
 		ALL_LANGS = %w{JavaScript Ruby Java PHP Python C++ C Objective-C C# Shell CSS
     	      Perl CoffeeScript VimL Scala Go Prolog Clojure Haskell Lua}.sort
-		@@extractor ||= Phrasie::Extractor.new
+		@@extractor = Phrasie::Extractor.new({:filter => {:strength=>1, :occur=>1}, :strength=>1, :occur=>1})
 		@@org_members = {};
 
 		def initialize(client, options={})
