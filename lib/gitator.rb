@@ -42,7 +42,7 @@ module Gitator
 		end
 	
 	    def init_logger
-		  @logger = Logger.new(STDOUT)
+		  @logger = Logger.new('gitator.log', 10, 1024000)
 		  @logger.level = Logger::INFO
 		end
 		
