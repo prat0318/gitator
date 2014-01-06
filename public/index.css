@@ -37,10 +37,15 @@ a {
 	padding-top: 60px;
 }
 
+#footer {
+    background-color: #F5F5F5;
+    padding-top: 50px;
+}
+
 #footer-button {
 	margin:auto; 
 	display:block; 
-	width:170px
+	width:150px
 }
 
 .container {
@@ -62,4 +67,20 @@ a {
     overflow: auto;
     -moz-border-radius: 45px;
     border-radius: 45px;
+}
+
+.white-gh-ico {
+	background-position: -25px -21px;
+	height: 22px;
+	width: 22px;
+}
+
+#wrap {
+    height: auto !important;
+    margin: 0 auto -60px;
+    min-height: 100%;
+}
+
+html, body {
+    height: 100%;
 }

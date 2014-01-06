@@ -17,16 +17,15 @@ module Gitator
       :scopes => "",
       :secret => CLIENT_SECRET,
       :client_id => CLIENT_ID,
-      :callback_url => "/",
+      :callback_url => "/login?",
     }
-
-    # set :main, nil
 
     register Sinatra::Auth::Github
 
     def get_client(params, init = false)
       if(params["public"] == "true") 
-        owner = params["username"] || 'prat0318'
+        owner = params["username"]
+        owner = 'prat0318' if owner.nil? || owner == ""
         client = Octokit::Client.new(
           :client_id => CLIENT_ID,
           :client_secret => CLIENT_SECRET,
@@ -46,13 +45,17 @@ module Gitator
       end
     end
 
-    get '/' do
+    get '/login' do
       begin
         @main = get_client(params, true)
       rescue Octokit::NotFound => e
         return erb :not_found, :locals => {:error => "#{params["username"]} not found!"}
       end
-      erb :index, :locals => {}
+      erb :login, :locals => {}
+    end
+
+    get '/' do
+      erb :index
     end
 
     get '/suggest' do
@@ -70,20 +73,5 @@ module Gitator
       @main = get_client(params)
       @main.send("get_profile_info", params["id"])
     end
-
-    # get '/' do
-
-    #   if !authenticated?
-    #     authenticate!
-    #   else
-    #     client = Octokit::Client.new(
-    #       :login => github_user.login,
-    #       :access_token => github_user.token,
-    #       :auto_paginate => false
-    #     )
-    #     settings.main = Gitator::Main.new client, {}
-    #     erb :index, :locals => {}
-    #   end
-    # end
   end
 end

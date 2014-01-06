@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gitator</title>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="index.css" />
+  <link rel="stylesheet" type="text/css" href="gh-btn.css" />
+</head>
+<body>
+
+  <div id="loadingDiv" class="loading"></div>
+  <a href="https://github.com/prat0318/gitator"><img id="ribbon" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+<div id="wrap">
+  <div class="container">
+    <img style="float:right" src="http://gravatar.com/avatar/<%=@main.user_info.gravatar_id%>"></img>
+	<div class="page-header">
+	  <h1><a href="/">Gitator</a><small> Find awesome repos which best suit your profile!
+	  <a href="http://github.com/<%=@main.username%>" id="username-text">@<%=@main.username%></a>
+	  </small></h1>
+	</div>
+
+	<ul id="search-type" class="nav nav-tabs nav-justified">
+	  <li class="active"><a href="#" data-toggle="tab" name="repos" class="search-type">Repo</a></li>
+	  <li><a href="#" data-toggle="tab" name="locn" class="search-type">Location</a></li>
+	  <li><a href="#" data-toggle="tab" name="orgs" class="search-type">Org.</a></li>
+	</ul>
+	<div id="main-body" style="overflow:hidden">
+		<div style="margin: 10px; float: right; width: 67%">
+			<ul id="lang" class="nav nav-pills nav-justified" style="padding-bottom: 15px">
+			  <% @main.lang.each do |i| %>
+			    <li><a href="#" data-toggle="pill" name="<%= i %>"><%= i %></a></li>
+			  <% end %>
+
+			  <li class="dropdown">
+			    <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="lang-dropdown">
+			      Others <span class="caret"></span>
+			    </a>
+			    <ul class="dropdown-menu">
+			    	<% Gitator::Main::ALL_LANGS.each do |lang| %>
+			    	<li><a href="#" data-toggle="pill" name="<%= lang%>"><%=lang%></a></li>
+			    	<% end %>
+			    </ul>
+			  </li>
+			</ul>
+         <div id="alert-warning" style="display:none" class="alert alert-warning">
+            <button type="button" class="close" onclick="$('#alert-warning').hide('slow')" aria-hidden="true">&times;</button>
+            <div id="alert-warning-text"></div>
+         </div>
+         <div id="alert-danger" style="display:none" class="alert alert-danger">
+            <button type="button" class="close" onclick="$('#alert-danger').hide('slow')" aria-hidden="true">&times;</button>
+            <div id="alert-danger-text"></div>
+         </div>
+			<div id="suggestion"></div>
+		</div>
+		<ul id="category" class="nav nav-pills nav-stacked" style="">
+			<% @main.sidebar.each do |k,v| %>
+				<% v.each do |val| %>
+					<li style="display:none" class="<%=k%> category"><a class="height-120" href="#" data-toggle="pill" name="<%=val[0]%>">
+					<%=val[0]%><br/><span style="font-size: 50%"><%=val[1]%></span></a></li>
+				<% end %>
+			<% end %>
+		</ul>
+  	</div>
+   </div>
+  </div>
+  <div id="footer">
+     <a role="button" class="btn btn-primary btn-xs" id="footer-button" href="http://github.com/prat0318/gitator/issues/new">
+      <span class="glyphicon glyphicon-envelope"></span> Feedback/Suggestions</a>
+  </div>
+</body>
+</html>
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+<script>
+    $(".nav").click(function(e){
+        if($(e.target).hasClass("search-type"))
+            setTimeout( function(){updateSidebar(e)}, 10);
+        else
+            ajaxCall(e);
+    });
+
+    function showProfileInfo(e) {
+        $.ajax({
+            type: "GET",
+            url: "/profile_info",
+            data: {
+                   id: e.id, 
+                   username: '<%=@main.username%>',
+                   public: getParameterByName('public')
+                 },
+            success: function(data){
+                data = $.parseJSON(data);
+                $("#"+e.id+"-line1").append('<b>'+data.name+'</b>');
+                if(data.blog) {
+                    var blog = ((data.blog.substring(0,4) == 'http') ? data.blog : ('http://'+data.blog));
+                    $("#"+e.id+"-line1").append('<a href="'+blog+'"> ( '+ data.blog+' )</a>');
+                }
+                if(data.company)
+                    $("#"+e.id+"-line2").append(data.company + ', ');
+                $("#"+e.id+"-line2").append(data.location);
+                footerHTML = ghWithCountButton('Repos', addCommas(data.public_repos), 'http://github.com/'+             data.login+'?tab=repositories') +
+                             ghWithCountButton('Gists', addCommas(data.public_gists), 'http://gist.github.com/'+data.login) +
+                             ghWithCountButton('Follow @'+data.login, addCommas(data.followers), 'http://github.com/'+data.login);
+                $("#"+e.id+"-footer").append('&nbsp;'+footerHTML)
+            },
+        });
+    }
+
+    function updateSidebar(e){      
+        $(".category").hide()
+        $(".category").removeClass("active")
+        $("."+getName("search-type")).show()
+        $($("#category").children(":visible").first()).addClass("active")
+        ajaxCall(e);
+    }
+
+    function cut(text) {
+        var maxCharLen = 35
+        var short = text.substr(0, maxCharLen);
+        var isTrimmed = (short.length == maxCharLen)
+        if (/^\S/.test(text.substr(maxCharLen)))
+            short = short.replace(/\s+\S*$/, "");
+        return (isTrimmed ? short+"..." : short);
+    }
+
+    function show_matchings(match_arr, score){
+        str = '<M style="color:#023752"><m style="color:#31708F">Matches: </m>'
+        $.each(match_arr, function(i, item) {str += "\""+ cut(item.fragment)+"\"&nbsp;&nbsp;"});
+        str+= ('<br/><m style="color:#31708F">Match Score: </m>'+score.toFixed(2)+'&nbsp;&nbsp;')
+        keywords = {}
+        $.each(match_arr, function(i, item_arr) {
+            $.each(item_arr.matches, function(i, item) {
+                kw = item.toLowerCase();
+                if(kw in keywords)
+                    keywords[kw] += 1
+                else
+                    keywords[kw] = 1
+            });
+        });
+        str += '<m style="color:#31708F"> Profile Keywords: '
+        $.each(keywords, function(i, item){
+            str+= ('<span style="padding-right:15px;"><b>'+i+' </b><span class="badge">'+item+'</span></span>')
+        });
+        str += '</m></M>'
+        return str;
+    }
+
+    function getName(divId) {
+        var divString = "#"+divId;
+        return $($($(divString).find(".active").last()).children()[0]).attr('name');
+    }
+
+    function buildRepoPanel(object) {
+        desc = object.description ? '"'+object.description.substr(0,70)+'"' : ''
+        repo_name = object.owner+'/'+object.name
+        footerHtml = ghWithCountButton('Fork', addCommas(object.forks), 'http://github.com/'+repo_name) + 
+                     ghWithCountButton('Star', addCommas(object.watchers),'http://github.com/'+repo_name) +
+                     ghButton('Follow @'+object.owner, 'http://github.com/'+object.owner);
+        html = '<div class="panel panel-info"><div class="panel-heading"><a href="http://github.com/'+repo_name+'" style="font-weight:bold">'+
+                repo_name+'</a> - '+desc+ 
+                '</div><div class="panel-body">'+ show_matchings(object.match, object.score) +
+                '</div><div class="panel-footer">&nbsp;'+footerHtml+'</div></div>';
+        $(html).hide().appendTo("#suggestion").fadeIn(500);
+    }
+
+    function buildUserPanel(object) {
+        id = object.login
+        html ='<div class="panel panel-success">'+
+                    '<div class="panel-heading">'+
+                        '<span style="font-weight:bold">@'+id+'</span> ( '+object.type+' ) '+
+                         '<button type="button" id='+id+' class="btn btn-default btn-xs"'+
+                         ' onclick="showProfileInfo(this)">'+
+                            '<span class="glyphicon glyphicon-info-sign" style="color:#3C763D"></span>'+
+                         ' More Info</button>'+
+                     '</div>'+
+                     '<div class="panel-body" style="padding: 0px" id="'+id+'-body">'+
+                        '<img style="float:left" src="http://gravatar.com/avatar/'+object.gravatar_id+'">'+
+                        '</img>'+
+                        '<div style="float:left; padding: 15px; color: #3C763D"><span id="'+id+'-line1"/><br/><span id="'+id+'-line2"/></div>'+
+                     '</div>'+
+                     '<div class="panel-footer" id="'+id+'-footer">'+
+                     '</div>'+
+                 '</div>';
+        $(html).hide().appendTo("#suggestion").fadeIn(500);
+    }
+
+    function ajaxCall(e) {
+        if(e && e.target.id == "lang-dropdown") return;
+        $("#alert-danger").hide(); $("#alert-warning").hide();
+        setTimeout(function () {
+            $.ajax({
+                type: "GET",
+                url: "/suggest",
+                data: {
+                       username: '<%=@main.username%>',
+                       lang: getName("lang"), 
+                       category: getName("category"),
+                       search_type: getName("search-type"),
+                       public: getParameterByName('public')
+                      },                       
+                success: function(data){
+                        data = $.parseJSON(data);
+                        $("#suggestion").empty();
+                        if(!data.suggestions || (data.suggestions.length == 0)) {
+                            $("#alert-warning-text").html("No relevant matches found! :( Try something else!"); 
+                            $("#alert-warning").show("slow")
+                            return
+                        }
+                        $.each(data.suggestions, function(index, object){
+                            window["build"+data.type+"Panel"](object)
+                        });
+                },
+                error: function(response, q, t){
+                    $("#suggestion").empty();
+                    var msg = "Oops! "+ response.responseJSON.type
+                    if(response.responseJSON.type == "Octokit::TooManyRequests")
+                        msg += ". My API Limit exceeded :( Try instead logging from your GitHub a/c."
+                    else
+                        msg += ". Please try again after some time."       
+                    $("#alert-danger-text").html(msg)
+                    $("#alert-danger").show("slow")
+                }
+            }, 20);
+        });
+    }
+
+    function ghWithCountButton(name, n, href) {
+        var countType = {'Fork': '/network', 'Star': '/stargazers'}
+        var countTypeName = countType[name] ? countType[name] : ''
+        return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a><a class="gh-count" id="gh-count" href="'+href+countTypeName+'" target="_blank" style="">'+n+'</a></span>'
+    }
+
+    function ghButton(name, href) {
+        return '<span class="github-btn github-forks" id="github-btn"><a class="gh-btn" id="gh-btn" href="'+href+'" target="_blank"><span class="gh-ico"></span><span class="gh-text" id="gh-text">'+name+'</span></a></span>'
+    }
+
+    function addCommas(n) {
+      return String(n).replace(/(\d)(?=(\d{3})+$)/g, '$1,')
+    }
+
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    var $loading = $('#loadingDiv').fadeTo(0, 0);
+    $(document)
+      .ajaxStart(function () {
+        $loading.fadeTo(600, 1);
+      })
+      .ajaxStop(function () {
+        $loading.fadeTo(600, 0);
+      });
+    $("."+getName("search-type")).show()
+    $($("#category").children(":visible").first()).addClass("active")
+    $($("#lang").children().first()).addClass("active")
+    ajaxCall(null);
+
+</script>
