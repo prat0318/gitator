@@ -8,9 +8,7 @@ require "logger"
 module Gitator
 
 	class Main
-		attr_accessor :client, :username, :repos, :is_client_auth, :lang
-		attr_accessor :repos_hash, :logger, :user_info, :following, :org_members
-		attr_accessor :sidebar, :users_cache
+		attr_accessor :sidebar, :lang, :username, :client, :user_info, :logger
 
 		LANG_COUNT = 4
 		REPO_DESCR_COUNT = 6
@@ -25,20 +23,22 @@ module Gitator
 		ALL_LANGS = %w{JavaScript Ruby Java PHP Python C++ C Objective-C C# Shell CSS
     	      Perl CoffeeScript VimL Scala Go Prolog Clojure Haskell Lua}.sort
 		@@extractor ||= Phrasie::Extractor.new
+		@@org_members = {};
 
 		def initialize(client, options={})
 			@client = client
 			@username = client.login || options[:owner]
 			@is_client_auth = !!client.login
 			@lang = []; @sidebar = {}; @following = [@username]
-			@org_members = {}; @users_cache = {}
 			init_logger
 
-			username = @username if !@is_client_auth
-			@user_info = client.user username			
-			set_repos username
-			set_orgs username
-			set_locn
+			@query_username = @username if !@is_client_auth #pass nil if user is logged in
+			if options[:init]
+				@user_info = with_logging("info: #{@query_username}") { client.user @query_username }
+				set_repos
+				set_orgs
+				set_locn
+			end
 		end
 	
 	  def init_logger
@@ -46,9 +46,9 @@ module Gitator
 			@logger.level = Logger::INFO
 		end
 		
-		def set_repos(username)
+		def set_repos
 			@repos = with_logging("fetch repos") do
-				@client.repositories(username, {:per_page => FETCH_REPO, :type=> 'all', :sort=>'updated'})
+				@client.repositories(@query_username, {:per_page => FETCH_REPO, :type=> 'all', :sort=>'updated'})
 			end
 			@repos_hash = {:own => [], :contri => [], :forked => []}
 			@repos.each do |repo|
@@ -68,8 +68,8 @@ module Gitator
 			@sidebar[:repos] = repo_sidebar
 		end
 
-		def set_orgs(username)
-			@sidebar[:orgs] = client.organizations(username).map(&:login).map{|o| [o,'']}
+		def set_orgs
+			@sidebar[:orgs] = with_logging("get orgs") { client.organizations(@query_username).map(&:login).map{|o| [o,'']} }
 		end
 
 		def set_locn
@@ -112,14 +112,13 @@ module Gitator
 			end
 			#@logger.info("String to be searched : #{search_string}")
 			result = @client.search_users(search_string, {:per_page => SEARCH_RESULT})
-			result.items.reject{|r| #@users_cache[r.id] = r.rels[:self].get.data
-			                        @following.include? r.login}[0..(SHOW_SUGG-1)]
+			result.items.reject{|r| @following.include? r.login}[0..(SHOW_SUGG-1)]
 		end
 
 		def parse_descriptions(repos)
 			phrase = repos.sort_by{|r| r.updated_at}.reverse[0..(REPO_DESCR_COUNT-1)].
 										 map{|r| r.description}.join(" ")
-      words = @@extractor.phrases(phrase).select{|i| i[2] == 1}[0..(WORDS_LIMIT-1)].
+     		words = @@extractor.phrases(phrase).select{|i| i[2] == 1}[0..(WORDS_LIMIT-1)].
       																	 map{|j| j[0]}
 			return words.join(" OR ")
 		end
@@ -150,9 +149,7 @@ module Gitator
 		end
 
 		def get_org_members(org)
-			org_members = @org_members[org.to_sym]
-			org_members ||= with_logging("org_members"){@client.org_members(org).map(&:login)}
-			@org_members[org.to_sym] ||= org_members
+			@@org_members[org.to_sym] ||= with_logging("org_members"){ @client.org_members(org).map(&:login) }
 		end
 
 		def get_orgs_suggestions(options={})
@@ -160,31 +157,32 @@ module Gitator
 			org = options[:category]
 			lang = options[:lang]
 			org_members = get_org_members(org)
-
 			result = with_logging("search_user_org") do
 			  call_api_to_suggest_users lang, {:org_members => org_members}
 			end			
+
 			{
-				:type => 'User',
+			  :type => 'User',
 			  :suggestions => format_user_result(result)      
 			}.to_json			
 		end
 
 		def get_repos_suggestions(options = {})
 			return {:suggestions => []}.to_json unless options_validated?(options, 'repos')
+			set_repos unless @repos_hash
 			param_lang = options[:lang]
 			repo_type = options[:category]
 			result = with_logging("search_repo") do
 			  call_api_to_suggest_repos @repos_hash[repo_type.to_sym], param_lang, (Date.today << MONTHS_AGO)
 			end
 			{
-				:type => 'Repo',
+			  :type => 'Repo',
 			  :suggestions => format_repo_result(result)      
 			}.to_json
 		end
 
 		def get_profile_info(id)
-			@client.user(id).attrs.to_json
+			with_logging("fetch profile info #{id}") { @client.user(id).attrs.to_json }
 		end
 
 		def format_user_result(result)

@@ -24,14 +24,14 @@ module Gitator
 
     register Sinatra::Auth::Github
 
-    def get_client(params)
+    def get_client(params, init = false)
       if(params["public"] == "true") 
         owner = params["username"] || 'prat0318'
         client = Octokit::Client.new(
           :client_id => CLIENT_ID,
           :client_secret => CLIENT_SECRET,
           :auto_paginate => false)
-        return Gitator::Main.new client, {:owner => owner}
+        return Gitator::Main.new client, {:owner => owner, :init => init}
       else
          if !authenticated?
             authenticate!
@@ -41,14 +41,14 @@ module Gitator
             :access_token => github_user.token,
             :auto_paginate => false
           )
-          return Gitator::Main.new client, {}
+          return Gitator::Main.new client, {:init => init}
         end
       end
     end
 
     get '/' do
       begin
-        @main = get_client(params)
+        @main = get_client(params, true)
       rescue Octokit::NotFound => e
         return erb :not_found, :locals => {:error => "#{params["username"]} not found!"}
       end
