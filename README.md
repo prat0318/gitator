@@ -32,6 +32,6 @@ Any kind of contribution (through a pull-request), small or big, is whole hearte
 
 ##Credits
 
-1. Thanks to [mdo/github-buttons](https://github.com/mdo/github-buttons) from which github buttons CSS is copied. (I would directly use the iframe but would incur an API call)
+1. Thanks to [mdo/github-buttons](https://github.com/mdo/github-buttons) from which github buttons CSS is copied. (I would directly use the iframe but that would have incurred an API call)
 2. Thanks to [ashleyw/phrasie](https://github.com/ashleyw/phrasie/) which i have used as a gem for keyword extraction from a phrase.
 3. Finally, to [octokit/octokit.rb](https://github.com/octokit/octokit.rb) which is written so cleanly and beautifully.
