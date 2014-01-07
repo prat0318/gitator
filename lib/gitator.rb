@@ -74,7 +74,7 @@ module Gitator
 		end
 
 		def set_locn
-			@sidebar[:locn] =  [[@user_info.location,'']]
+			@sidebar[:locn] =  [[@user_info.location,'']] unless @user_info.location == ''
 		end
 
 		def own_repo?(repo)
