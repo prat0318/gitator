@@ -1,4 +1,5 @@
 require "gitator/version"
+require 'pretty_date'
 require "octokit"
 require "phrasie"
 require "json"
@@ -182,7 +183,10 @@ module Gitator
 		end
 
 		def get_profile_info(id)
-			with_logging("fetch profile info #{id}") { @client.user(id).attrs.to_json }
+			with_logging("fetch profile info #{id}") do 
+				attrs = @client.user(id).attrs
+				attrs.merge(:last_activity => attrs[:updated_at].to_pretty).to_json
+			end
 		end
 
 		def format_user_result(result)
@@ -204,6 +208,7 @@ module Gitator
 		        :watchers => r.watchers, 
 		        :description => r.description,
 		        :score => r.score, 
+		        :last_activty => r.updated_at.to_pretty,
 		        :match => r.text_matches.map do |tm|
 		                  	{
 		                  		:fragment => tm.fragment, 

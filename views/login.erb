@@ -105,7 +105,8 @@
                 $("#"+e.id+"-line2").append(data.location);
                 footerHTML = ghWithCountButton('Repos', addCommas(data.public_repos), 'http://github.com/'+             data.login+'?tab=repositories') +
                              ghWithCountButton('Gists', addCommas(data.public_gists), 'http://gist.github.com/'+data.login) +
-                             ghWithCountButton('Follow @'+data.login, addCommas(data.followers), 'http://github.com/'+data.login);
+                             ghWithCountButton('Follow @'+data.login, addCommas(data.followers), 'http://github.com/'+data.login) + 
+                             'Last Activity was '+ data.last_activity;
                 $("#"+e.id+"-footer").append('&nbsp;'+footerHTML)
             },
             error: function(response) { showErrorMessage(response); },
@@ -161,7 +162,8 @@
         repo_name = object.owner+'/'+object.name
         footerHtml = ghWithCountButton('Fork', addCommas(object.forks), 'http://github.com/'+repo_name) + 
                      ghWithCountButton('Star', addCommas(object.watchers),'http://github.com/'+repo_name) +
-                     ghButton('Follow @'+object.owner, 'http://github.com/'+object.owner);
+                     ghButton('Follow @'+object.owner, 'http://github.com/'+object.owner)+
+                     ' Last Activity was '+object.last_activty;
         html = '<div class="panel panel-info"><div class="panel-heading"><a href="http://github.com/'+repo_name+'" style="font-weight:bold">'+
                 repo_name+'</a> - '+desc+ 
                 '</div><div class="panel-body">'+ show_matchings(object.match, object.score) +
@@ -173,7 +175,7 @@
         id = object.login
         html ='<div class="panel panel-success">'+
                     '<div class="panel-heading">'+
-                        '<span style="font-weight:bold">@'+id+'</span> ( '+object.type+' ) '+
+                        '<a href="http://github.com/'+id+'" style="font-weight:bold">@'+id+'</a> ( '+object.type+' ) '+
                          '<button type="button" id='+id+' class="btn btn-default btn-xs"'+
                          ' onclick="showProfileInfo(this)">'+
                             '<span class="glyphicon glyphicon-info-sign" style="color:#3C763D"></span>'+
