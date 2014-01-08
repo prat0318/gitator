@@ -19,9 +19,9 @@
 		</div>
 	  	<div class="row" style="text-align: center; padding: 50px; margin: 0 auto; max-width: 300px">
 
-		    <form method="get" action="login">
+		    <form method="get" action="login" onsubmit="a=document.getElementById('username'); if(a.value.length == 0)a.value=a.getAttribute('placeholder')">
 		      <div class="input-group input-group-lg">
-			      <input name="username" type="text" class="form-control" placeholder="prat0318">
+			      <input id="username" name="username" type="text" class="form-control" placeholder="schacon">
 			      <input name="public" value="true" type="hidden">
 			      <span class="input-group-btn">
 			        <button class="btn btn-default btn-lg" type="submit"><span class="glyphicon glyphicon-log-in"></span></button>
