@@ -138,7 +138,7 @@ module Gitator
 
 		def get_locn_suggestions(options={})
 			return {:suggestions => []}.to_json unless options_validated?(options, 'locn')
-			locn = options[:category]
+			locn = options[:category].split(",").first  #Remove state info from location
 			lang = options[:lang]
 			result = with_logging("search_user_locn") do
 			  call_api_to_suggest_users lang, {:locn => locn}
