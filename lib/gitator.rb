@@ -219,6 +219,7 @@ module Gitator
 	      end
 	    end
 
+
 		def with_logging(desc)
 			start = Time.now
 			result = yield
