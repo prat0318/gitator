@@ -20,7 +20,6 @@ module Gitator
 		SINGLE = 1
 		SEARCH_RESULT=10
 		SHOW_SUGG = 6
-		MAX_SEARCH_LENGTH=1355
 		ALL_LANGS = %w{JavaScript Ruby Java PHP Python C++ C Objective-C C# Shell CSS
     	      Perl CoffeeScript VimL Scala Go Prolog Clojure Haskell Lua}.sort
 		@@extractor = Phrasie::Extractor.new({:filter => {:strength=>1, :occur=>1}, :strength=>1, :occur=>1})
@@ -105,11 +104,8 @@ module Gitator
 			search_string = ""
 			search_string += " language:#{for_lang}" unless for_lang.nil?
 			search_string += " location:#{options[:locn]}" unless options[:locn].nil?
-			unless options[:org_members].nil? 
-				options[:org_members].each_with_index do |member, i| 
-											  search_string += " user:#{member}"
-					                          break if search_string.size > MAX_SEARCH_LENGTH
-					                      end
+			unless options[:org_members].nil?
+				search_string += options[:org_members].map{|name| "user:#{name}"}.join(" ") 
 			end
 			#@logger.info("String to be searched : #{search_string}")
 			result = @client.search_users(search_string, {:per_page => SEARCH_RESULT})
