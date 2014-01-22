@@ -102,8 +102,8 @@ module Gitator
 
 		def call_api_to_suggest_users(for_lang, options)
 			search_string = ""
-			search_string += " language:#{for_lang}" unless for_lang.nil?
-			search_string += " location:#{options[:locn]}" unless options[:locn].nil?
+			search_string += " language:#{for_lang} " unless for_lang.nil?
+			search_string += " location:#{options[:locn]} " unless options[:locn].nil?
 			unless options[:org_members].nil?
 				search_string += options[:org_members].map{|name| "user:#{name}"}.join(" ") 
 			end
