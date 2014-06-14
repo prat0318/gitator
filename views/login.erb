@@ -84,30 +84,30 @@
             ajaxCall(e);
     });
 
-    function showProfileInfo(e) {
+    function showProfileInfo(id) {
         $.ajax({
             type: "GET",
             url: "/profile_info",
             data: {
-                   id: e.id, 
+                   id: id, 
                    username: '<%=@main.username%>',
                    public: getParameterByName('public')
                  },
             success: function(data){
                 data = $.parseJSON(data);
-                $("#"+e.id+"-line1").append('<b>'+data.name+'</b>');
+                $("#"+id+"-line1").append('<b>'+data.name+'</b>');
                 if(data.blog) {
                     var blog = ((data.blog.substring(0,4) == 'http') ? data.blog : ('http://'+data.blog));
-                    $("#"+e.id+"-line1").append('<a href="'+blog+'"> ( '+ data.blog+' )</a>');
+                    $("#"+id+"-line1").append('<a href="'+blog+'"> ( '+ data.blog+' )</a>');
                 }
                 if(data.company)
-                    $("#"+e.id+"-line2").append(data.company + ', ');
-                $("#"+e.id+"-line2").append(data.location);
+                    $("#"+id+"-line2").append(data.company + ', ');
+                $("#"+id+"-line2").append(data.location);
                 footerHTML = ghWithCountButton('Repos', addCommas(data.public_repos), 'http://github.com/'+             data.login+'?tab=repositories') +
                              ghWithCountButton('Gists', addCommas(data.public_gists), 'http://gist.github.com/'+data.login) +
                              ghWithCountButton('Follow @'+data.login, addCommas(data.followers), 'http://github.com/'+data.login) + 
                              'Last Activity was '+ data.last_activity;
-                $("#"+e.id+"-footer").append('&nbsp;'+footerHTML)
+                $("#"+id+"-footer").append('&nbsp;'+footerHTML)
             },
             error: function(response) { showErrorMessage(response); },
         });
@@ -176,10 +176,11 @@
         html ='<div class="panel panel-success">'+
                     '<div class="panel-heading">'+
                         '<a href="http://github.com/'+id+'" style="font-weight:bold">@'+id+'</a> ( '+object.type+' ) '+
-                         '<button type="button" id='+id+' class="btn btn-default btn-xs"'+
+/*                         '<button type="button" id='+id+' class="btn btn-default btn-xs"'+
                          ' onclick="showProfileInfo(this)">'+
                             '<span class="glyphicon glyphicon-info-sign" style="color:#3C763D"></span>'+
                          ' More Info</button>'+
+*/
                      '</div>'+
                      '<div class="panel-body" style="padding: 0px" id="'+id+'-body">'+
                         '<img style="float:left" src="http://gravatar.com/avatar/'+object.gravatar_id+'">'+
@@ -190,6 +191,7 @@
                      '</div>'+
                  '</div>';
         $(html).hide().appendTo("#suggestion").fadeIn(500);
+        showProfileInfo(id);
     }
 
     function ajaxCall(e) {
