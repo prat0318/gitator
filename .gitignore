@@ -4,7 +4,7 @@
 .bundle
 .config
 .yardoc
-logs/
+logs/gitator.log
 Gemfile.lock
 InstalledFiles
 _yardoc
