@@ -1,12 +1,24 @@
-FROM ubuntu:14.04
+FROM phusion/passenger-ruby20
 MAINTAINER Prateek Agarwal <prat0318@gmail.com>
-RUN apt-get -qq update
-RUN apt-get -qqy install ruby ruby-dev git make
+# Set correct environment variables.
+ENV HOME /root
+
+# Use baseimage-docker's init process.
+CMD ["/sbin/my_init"]
+
 RUN gem install sinatra
 RUN gem install bundler
-ADD ./gitator /root/gitator/
-RUN ls /root
-RUN cd /root/gitator; bundle install
-EXPOSE 4567
-WORKDIR /root/gitator
-CMD ["bundle", "exec", "rackup", "-p", "4567"]
+
+ADD webapp.conf /etc/nginx/sites-enabled/webapp.conf
+ADD http.conf /etc/nginx/conf.d/http.conf
+
+ADD ./gitator /home/app/gitator/
+RUN chown -R 9999 /home/app/gitator
+RUN cd /home/app/gitator; bundle install --deployment
+
+RUN rm -f /etc/service/nginx/down
+
+RUN /usr/sbin/enable_insecure_key
+
+# Clean up APT when done.
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
