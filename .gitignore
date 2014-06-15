@@ -5,7 +5,6 @@
 .config
 .yardoc
 logs/gitator.log
-Gemfile.lock
 InstalledFiles
 _yardoc
 coverage
