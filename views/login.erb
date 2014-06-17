@@ -88,7 +88,8 @@
         $.ajax({
             type: "GET",
             url: "/profile_info",
-            data: {
+            crossDomain: true, 
+	   data: {
                    id: id, 
                    username: '<%=@main.username%>',
                    public: getParameterByName('public')
@@ -200,7 +201,8 @@
         setTimeout(function () {
             $.ajax({
                 type: "GET",
-                url: "/suggest",
+                 crossDomain: true,
+		   url: "/suggest",
                 data: {
                        username: '<%=@main.username%>',
                        lang: getName("lang"), 
